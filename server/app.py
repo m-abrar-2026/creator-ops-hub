@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, text
 from groq import Groq
 import datetime
 import os
+import re
 
 
 class Config:
@@ -22,32 +23,32 @@ def create_app():
     app.config.from_object(Config())
     app.secret_key = os.getenv('SECRET_KEY', 'secret123')
 
-    # Safely retrieve and sanitize individual components with strict placeholder rejections
+    # 1. Retrieve raw environment variables safely
     db_user = os.getenv('MYSQL_USER', os.getenv('MYSQLUSER', os.getenv('DB_USER', 'root')))
     db_password = os.getenv('MYSQL_PASSWORD', os.getenv('MYSQLPASSWORD', os.getenv('DB_PASSWORD', 'root123')))
+    db_host = os.getenv('MYSQL_HOST', os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost')))
+    if not db_host or str(db_host).strip().lower() in ['host', '']:
+        db_host = 'localhost'
 
-    # Sanitize host: reject literal placeholder "host"
-    raw_host = os.getenv('MYSQL_HOST', os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost')))
-    db_host = 'localhost' if not raw_host or str(raw_host).strip().lower() in ['', 'host', 'none'] else str(
-        raw_host).strip()
-
-    # Sanitize port: reject literal placeholder "port" or non-digits
+    # STRICT PORT SANITIZATION: Prevent 'invalid literal for int() with base 10: "port"'
     raw_port = os.getenv('MYSQL_PORT', os.getenv('MYSQLPORT', '3306'))
     db_port = str(raw_port).strip()
-    if not db_port or not db_port.isdigit() or db_port.lower() == 'port':
-        db_port = '3306'
+    if not db_port.isdigit():
+        # Search for any digits in the string if it's malformed (e.g. "port:3306" or similar)
+        digit_match = re.search(r'\d+', db_port)
+        db_port = digit_match.group(0) if digit_match else '3306'
 
-    # Sanitize database name: reject literal placeholder "railway" if host is localhost
-    raw_name = os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', os.getenv('MYSQL_NAME', 'creator_ops')))
-    db_name = 'creator_ops' if not raw_name or str(raw_name).strip().lower() == '' else str(raw_name).strip()
+    db_name = os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', os.getenv('MYSQL_NAME', 'creator_ops')))
+    if not db_name or str(db_name).strip() == '':
+        db_name = 'creator_ops'
 
     db_host_port = f"{db_host}:{db_port}"
 
-    # Evaluate DATABASE_URL, MYSQL_PRIVATE_URL, or MYSQL_URL safely, rejecting invalid placeholders
+    # 2. Check complete URL variables, discarding invalid strings or placeholders
     raw_db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_PRIVATE_URL') or os.getenv('MYSQL_URL')
 
-    if not raw_db_url or raw_db_url.strip() == '' or any(
-            p in raw_db_url.lower() for p in ['= ', 'railway', 'port', 'host']):
+    if not raw_db_url or 'port' in raw_db_url.lower() or 'host' in raw_db_url.lower() or raw_db_url.strip() in ['',
+                                                                                                                'railway']:
         db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
     else:
         db_url = raw_db_url.strip()
@@ -501,4 +502,4 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host="0.0.0.0", debug=True)
+    app.run(debug=True, port=5000)
