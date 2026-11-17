@@ -22,36 +22,42 @@ def create_app():
     app.config.from_object(Config())
     app.secret_key = os.getenv('SECRET_KEY', 'secret123')
 
-    # Automatically ensure MySQL database exists before initializing SQLAlchemy (Supports Railway & Local envs)
+    # Safely retrieve and sanitize individual components with fallback defaults
     db_user = os.getenv('MYSQL_USER', os.getenv('MYSQLUSER', os.getenv('DB_USER', 'root')))
     db_password = os.getenv('MYSQL_PASSWORD', os.getenv('MYSQLPASSWORD', os.getenv('DB_PASSWORD', 'root123')))
     db_host = os.getenv('MYSQL_HOST', os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost')))
-    db_port = os.getenv('MYSQL_PORT', os.getenv('MYSQLPORT', '3306'))
-    db_name = os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', 'creator_ops'))
 
+    # Sanitize port to prevent 'invalid literal for int() with base 10: "port"' error
+    raw_port = os.getenv('MYSQL_PORT', os.getenv('MYSQLPORT', '3306'))
+    db_port = '3306' if not raw_port or not str(raw_port).isdigit() else str(raw_port)
+
+    db_name = os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', os.getenv('MYSQL_NAME', 'creator_ops')))
     db_host_port = f"{db_host}:{db_port}"
 
-    try:
-        temp_engine = create_engine(f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/')
-        with temp_engine.connect() as conn:
-            conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name};"))
-            conn.commit()
-    except Exception as e:
-        print(f" [DB SETUP NOTICE] Could not pre-create MySQL database: {e}")
-
-    # Robust URL fallback: Ignore invalid/placeholder strings like "railway" or empty values
+    # Evaluate DATABASE_URL, MYSQL_PRIVATE_URL, or MYSQL_URL safely, rejecting invalid placeholders
     raw_db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_PRIVATE_URL') or os.getenv('MYSQL_URL')
 
-    if not raw_db_url or raw_db_url.strip() == '' or raw_db_url.strip().lower() == 'railway':
+    if not raw_db_url or raw_db_url.strip() == '' or raw_db_url.strip().lower() in ['railway', 'port']:
         db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
     else:
         db_url = raw_db_url
 
+    # Ensure correct PyMySQL driver prefix
     if db_url.startswith('mysql://'):
         db_url = db_url.replace('mysql://', 'mysql+pymysql://', 1)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # Startup Debug Logging: Print safe connection string with password masked
+    safe_log_url = db_url
+    if '@' in safe_log_url and '://' in safe_log_url:
+        prefix, remainder = safe_log_url.split('://', 1)
+        credentials, host_part = remainder.split('@', 1)
+        if ':' in credentials:
+            user = credentials.split(':', 1)[0]
+            safe_log_url = f"{prefix}://{user}:******@{host_part}"
+    print(f" [DB CONFIG] Active SQLAlchemy Database URI: {safe_log_url}")
 
     # Configure Flask-Mail (Using Gmail SMTP)
     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
@@ -65,7 +71,7 @@ def create_app():
     db.init_app(app)
     mail = Mail(app)
 
-    # Automatically create tables on startup for production/Railway
+    # Automatically create tables on startup for production/Railway safely
     with app.app_context():
         try:
             db.create_all()
