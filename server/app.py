@@ -23,42 +23,40 @@ def create_app():
     app.config.from_object(Config())
     app.secret_key = os.getenv('SECRET_KEY', 'secret123')
 
-    # 1. Retrieve raw environment variables safely
-    db_user = os.getenv('MYSQL_USER', os.getenv('MYSQLUSER', os.getenv('DB_USER', 'root')))
-    db_password = os.getenv('MYSQL_PASSWORD', os.getenv('MYSQLPASSWORD', os.getenv('DB_PASSWORD', 'root123')))
-    db_host = os.getenv('MYSQL_HOST', os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost')))
-    if not db_host or str(db_host).strip().lower() in ['host', '']:
-        db_host = 'localhost'
+    raw_db_url = os.getenv("DATABASE_URL")
 
-    # STRICT PORT SANITIZATION: Prevent 'invalid literal for int() with base 10: "port"'
-    raw_port = os.getenv('MYSQL_PORT', os.getenv('MYSQLPORT', '3306'))
-    db_port = str(raw_port).strip()
-    if not db_port.isdigit():
-        digit_match = re.search(r'\d+', db_port)
-        db_port = digit_match.group(0) if digit_match else '3306'
+    print("DATABASE_URL EXISTS =", bool(raw_db_url))
 
-    db_name = os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', os.getenv('MYSQL_NAME', 'creator_ops')))
-    if not db_name or str(db_name).strip() == '':
-        db_name = 'creator_ops'
+    if not raw_db_url:
+        raise Exception(
+            "DATABASE_URL is missing in Railway Variables"
+        )
 
-    db_host_port = f"{db_host}:{db_port}"
+    db_url = raw_db_url.strip()
 
-    # 2. Check complete URL variables, discarding invalid strings or placeholders
-    raw_db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_PRIVATE_URL') or os.getenv('MYSQL_URL')
+    # Railway may provide mysql://
+    if db_url.startswith("mysql://"):
+        db_url = db_url.replace(
+            "mysql://",
+            "mysql+pymysql://",
+            1
+        )
 
-    if not raw_db_url or 'port' in raw_db_url.lower() or 'host' in raw_db_url.lower() or raw_db_url.strip() in ['',
-                                                                                                                'railway',
-                                                                                                                'DATABASE_URL =']:
-        db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
-    else:
-        db_url = raw_db_url.strip()
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Ensure correct PyMySQL driver prefix
-    if db_url.startswith('mysql://'):
-        db_url = db_url.replace('mysql://', 'mysql+pymysql://', 1)
+    # Safe logging
+    safe_log_url = db_url
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    if "@" in safe_log_url and "://" in safe_log_url:
+        prefix, remainder = safe_log_url.split("://", 1)
+        credentials, host_part = remainder.split("@", 1)
+
+        if ":" in credentials:
+            user = credentials.split(":", 1)[0]
+            safe_log_url = f"{prefix}://{user}:******@{host_part}"
+
+    print("[DB CONFIG]", safe_log_url)
 
     # Startup Debug Logging: Print safe connection string with password masked
     safe_log_url = db_url
@@ -69,6 +67,7 @@ def create_app():
             user = credentials.split(':', 1)[0]
             safe_log_url = f"{prefix}://{user}:******@{host_part}"
     print(f" [DB CONFIG] Active SQLAlchemy Database URI: {safe_log_url}")
+
 
     # Configure Flask-Mail (Using Gmail SMTP)
     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
@@ -568,8 +567,6 @@ def create_app():
 
     return app
 
-
-app = create_app()
 
 app = create_app()
 
