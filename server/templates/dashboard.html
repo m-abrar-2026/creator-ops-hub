@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - CreatorOps Hub{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 px-4 space-y-8">
+
+    <!-- Header -->
+    <div class="relative bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl p-8 text-white overflow-hidden shadow-xl border border-indigo-900/50">
+        <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-800/80 text-indigo-200 uppercase tracking-wider mb-3 border border-indigo-700/50">
+                    Studio Overview
+                </span>
+                <h1 class="text-3xl font-black tracking-tight">Welcome back, {{ session.get('username', 'Creator') }}</h1>
+                <p class="text-sm text-indigo-200/80 mt-1">Here is the real-time performance summary and click trend of your creator ecosystem.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/links" class="px-5 py-3 bg-white text-slate-900 rounded-2xl text-xs font-bold shadow-md hover:bg-indigo-50 transition">Manage Links</a>
+                <a href="/view/finance" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-bold shadow-md transition">View Finances</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Link Clicks</p>
+            <h3 class="text-3xl font-black text-slate-900 dark:text-white mt-2">{{ total_clicks }}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Across all active redirect slugs</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Affiliate Links</p>
+            <h3 class="text-3xl font-black text-slate-900 dark:text-white mt-2">{{ active_links_count }}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Managed monetization targets</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Performing Link</p>
+                {% if top_link %}
+                <h3 class="text-lg font-black text-slate-900 dark:text-white mt-2 truncate">{{ top_link.title }}</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium"><span class="text-indigo-600 dark:text-indigo-400 font-bold">{{ top_link.click_count }}</span> total clicks recorded</p>
+                {% else %}
+                <h3 class="text-lg font-black text-slate-400 mt-2">None Yet</h3>
+                <p class="text-xs text-slate-500 mt-1">Create a link to start tracking</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js Time-Series Analytics Section -->
+    <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-between mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-black text-slate-900 dark:text-white">Click Performance Trend (Time-Series)</h3>
+            <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-900">Real-Time Metrics</span>
+        </div>
+        <div class="relative h-72 w-full">
+            <canvas id="clickTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Activity Table -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
+        <h3 class="text-lg font-black text-slate-900 dark:text-white mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">Recent Activity & Links</h3>
+
+        {% if recent_links %}
+        <div class="max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+            <table class="w-full text-left border-collapse">
+                <thead class="sticky top-0 bg-white dark:bg-slate-900 z-10">
+                    <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <th class="py-3 px-4">Title</th>
+                        <th class="py-3 px-4">Slug / Redirect</th>
+                        <th class="py-3 px-4">Destination</th>
+                        <th class="py-3 px-4 text-center">Clicks</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                    {% for link in recent_links %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/50 transition">
+                        <td class="py-4 px-4 font-bold text-slate-900 dark:text-white">{{ link.title }}</td>
+                        <td class="py-4 px-4">
+                            <a href="/r/{{ link.slug }}" target="_blank" class="text-indigo-600 dark:text-indigo-400 font-mono text-xs hover:underline">
+                                /r/{{ link.slug }} ↗
+                            </a>
+                        </td>
+                        <td class="py-4 px-4 text-slate-500 dark:text-slate-400 truncate max-w-xs text-xs">{{ link.destination_url }}</td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="inline-block px-3 py-1 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold">
+                                {{ link.click_count }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <p class="text-sm text-slate-400 dark:text-slate-500">No recent activity found. Head over to the links section to create your first one!</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Include Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    fetch('/api/chart-analytics')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('clickTrendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Clicks Over Time',
+                        data: data.data,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(100, 116, 139, 0.1)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        });
+</script>
+{% endblock %}
