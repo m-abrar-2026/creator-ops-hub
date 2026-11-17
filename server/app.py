@@ -31,7 +31,6 @@ def create_app():
     db_host_port = f"{db_host}:{db_port}"
 
     try:
-        # Connect to MySQL server without specifying database name to create it if missing
         temp_engine = create_engine(f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/')
         with temp_engine.connect() as conn:
             conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name};"))
@@ -60,7 +59,15 @@ def create_app():
     db.init_app(app)
     mail = Mail(app)
 
-    # Initialize Groq Client safely (prevents testing crashes on certain HTTPX client versions)
+    # Automatically create tables on startup for production/Railway
+    with app.app_context():
+        try:
+            db.create_all()
+            print(" [DB NOTICE] Database tables verified/created successfully.")
+        except Exception as e:
+            print(f" [DB ERROR] Could not create tables: {e}")
+
+    # Initialize Groq Client safely
     groq_client = None
     try:
         groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
@@ -472,6 +479,4 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    with app.app_context():
-        db.create_all()
     app.run(debug=True, port=5000)
