@@ -29,8 +29,7 @@ def create_app():
             or os.getenv("MYSQL_URL")
     )
 
-    print("DATABASE_URL =", os.getenv("DATABASE_URL"))
-    print("MYSQL_PRIVATE_URL =", os.getenv("MYSQL_PRIVATE_URL"))
+
 
     if not raw_db_url:
         raise Exception("No database URL found")
