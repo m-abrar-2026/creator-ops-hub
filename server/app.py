@@ -34,7 +34,6 @@ def create_app():
     raw_port = os.getenv('MYSQL_PORT', os.getenv('MYSQLPORT', '3306'))
     db_port = str(raw_port).strip()
     if not db_port.isdigit():
-        # Search for any digits in the string if it's malformed (e.g. "port:3306" or similar)
         digit_match = re.search(r'\d+', db_port)
         db_port = digit_match.group(0) if digit_match else '3306'
 
@@ -47,8 +46,7 @@ def create_app():
     # 2. Check complete URL variables, discarding invalid strings or placeholders
     raw_db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_PRIVATE_URL') or os.getenv('MYSQL_URL')
 
-    if not raw_db_url or 'port' in raw_db_url.lower() or 'host' in raw_db_url.lower() or raw_db_url.strip() in ['',
-                                                                                                                'railway']:
+    if not raw_db_url or 'port' in raw_db_url.lower() or 'host' in raw_db_url.lower() or raw_db_url.strip() in ['', 'railway', 'DATABASE_URL =']:
         db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
     else:
         db_url = raw_db_url.strip()
@@ -82,7 +80,7 @@ def create_app():
     db.init_app(app)
     mail = Mail(app)
 
-    # Automatically create tables on startup for production/Railway safely
+    # Automatically create all tables on startup for production/Railway safely
     with app.app_context():
         try:
             db.create_all()
@@ -108,11 +106,13 @@ def create_app():
         user_notifications = []
         if 'user_id' in session:
             user_id = session.get('user_id')
-            db_notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.id.desc()).limit(
-                5).all()
-            user_notifications = [
-                {"title": n.title, "message": n.message} for n in db_notifications
-            ]
+            try:
+                db_notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.id.desc()).limit(5).all()
+                user_notifications = [
+                    {"title": n.title, "message": n.message} for n in db_notifications
+                ]
+            except Exception:
+                pass
         return dict(notifications=user_notifications)
 
     # Global Error Handlers for robust transaction rollbacks
