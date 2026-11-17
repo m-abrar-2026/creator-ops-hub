@@ -24,12 +24,15 @@ def create_app():
     # Automatically ensure MySQL database exists before initializing SQLAlchemy (Supports Railway & Local envs)
     db_user = os.getenv('MYSQLUSER', os.getenv('DB_USER', 'root'))
     db_password = os.getenv('MYSQLPASSWORD', os.getenv('DB_PASSWORD', 'root123'))
-    db_host = os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost:3306'))
+    db_host = os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost'))
+    db_port = os.getenv('MYSQLPORT', '3306')
     db_name = os.getenv('MYSQLDATABASE', 'creator_ops')
+
+    db_host_port = f"{db_host}:{db_port}"
 
     try:
         # Connect to MySQL server without specifying database name to create it if missing
-        temp_engine = create_engine(f'mysql+pymysql://{db_user}:{db_password}@{db_host}/')
+        temp_engine = create_engine(f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/')
         with temp_engine.connect() as conn:
             conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name};"))
             conn.commit()
@@ -37,10 +40,12 @@ def create_app():
         print(f" [DB SETUP NOTICE] Could not pre-create MySQL database (Ensure MySQL service is running): {e}")
 
     # Configure MySQL database connection using PyMySQL
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-        'DATABASE_URL',
-        f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
-    )
+    default_uri = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
+    db_url = os.getenv('DATABASE_URL', default_uri)
+    if db_url.startswith('mysql://'):
+        db_url = db_url.replace('mysql://', 'mysql+pymysql://', 1)
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Configure Flask-Mail (Using Gmail SMTP)
