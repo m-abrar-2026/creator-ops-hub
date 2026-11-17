@@ -23,14 +23,17 @@ def create_app():
     app.config.from_object(Config())
     app.secret_key = os.getenv('SECRET_KEY', 'secret123')
 
-    raw_db_url = os.getenv("DATABASE_URL")
+    raw_db_url = (
+            os.getenv("DATABASE_URL")
+            or os.getenv("MYSQL_PRIVATE_URL")
+            or os.getenv("MYSQL_URL")
+    )
 
-    print("DATABASE_URL EXISTS =", bool(raw_db_url))
+    print("DATABASE_URL =", os.getenv("DATABASE_URL"))
+    print("MYSQL_PRIVATE_URL =", os.getenv("MYSQL_PRIVATE_URL"))
 
     if not raw_db_url:
-        raise Exception(
-            "DATABASE_URL is missing in Railway Variables"
-        )
+        raise Exception("No database URL found")
 
     db_url = raw_db_url.strip()
 
