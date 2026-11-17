@@ -39,10 +39,13 @@ def create_app():
     except Exception as e:
         print(f" [DB SETUP NOTICE] Could not pre-create MySQL database: {e}")
 
-    # Check DATABASE_URL, then MYSQL_PRIVATE_URL, then MYSQL_URL, then fallback to individual components
-    db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_PRIVATE_URL') or os.getenv('MYSQL_URL')
-    if not db_url or db_url.strip() == '':
+    # Robust URL fallback: Ignore invalid/placeholder strings like "railway" or empty values
+    raw_db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_PRIVATE_URL') or os.getenv('MYSQL_URL')
+
+    if not raw_db_url or raw_db_url.strip() == '' or raw_db_url.strip().lower() == 'railway':
         db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
+    else:
+        db_url = raw_db_url
 
     if db_url.startswith('mysql://'):
         db_url = db_url.replace('mysql://', 'mysql+pymysql://', 1)
