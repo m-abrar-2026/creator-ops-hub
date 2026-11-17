@@ -22,25 +22,35 @@ def create_app():
     app.config.from_object(Config())
     app.secret_key = os.getenv('SECRET_KEY', 'secret123')
 
-    # Safely retrieve and sanitize individual components with fallback defaults
+    # Safely retrieve and sanitize individual components with strict placeholder rejections
     db_user = os.getenv('MYSQL_USER', os.getenv('MYSQLUSER', os.getenv('DB_USER', 'root')))
     db_password = os.getenv('MYSQL_PASSWORD', os.getenv('MYSQLPASSWORD', os.getenv('DB_PASSWORD', 'root123')))
-    db_host = os.getenv('MYSQL_HOST', os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost')))
 
-    # Sanitize port to prevent 'invalid literal for int() with base 10: "port"' error
+    # Sanitize host: reject literal placeholder "host"
+    raw_host = os.getenv('MYSQL_HOST', os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost')))
+    db_host = 'localhost' if not raw_host or str(raw_host).strip().lower() in ['', 'host', 'none'] else str(
+        raw_host).strip()
+
+    # Sanitize port: reject literal placeholder "port" or non-digits
     raw_port = os.getenv('MYSQL_PORT', os.getenv('MYSQLPORT', '3306'))
-    db_port = '3306' if not raw_port or not str(raw_port).isdigit() else str(raw_port)
+    db_port = str(raw_port).strip()
+    if not db_port or not db_port.isdigit() or db_port.lower() == 'port':
+        db_port = '3306'
 
-    db_name = os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', os.getenv('MYSQL_NAME', 'creator_ops')))
+    # Sanitize database name: reject literal placeholder "railway" if host is localhost
+    raw_name = os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', os.getenv('MYSQL_NAME', 'creator_ops')))
+    db_name = 'creator_ops' if not raw_name or str(raw_name).strip().lower() == '' else str(raw_name).strip()
+
     db_host_port = f"{db_host}:{db_port}"
 
     # Evaluate DATABASE_URL, MYSQL_PRIVATE_URL, or MYSQL_URL safely, rejecting invalid placeholders
     raw_db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_PRIVATE_URL') or os.getenv('MYSQL_URL')
 
-    if not raw_db_url or raw_db_url.strip() == '' or raw_db_url.strip().lower() in ['railway', 'port']:
+    if not raw_db_url or raw_db_url.strip() == '' or any(
+            p in raw_db_url.lower() for p in ['= ', 'railway', 'port', 'host']):
         db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
     else:
-        db_url = raw_db_url
+        db_url = raw_db_url.strip()
 
     # Ensure correct PyMySQL driver prefix
     if db_url.startswith('mysql://'):
