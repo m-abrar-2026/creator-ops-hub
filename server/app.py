@@ -39,8 +39,8 @@ def create_app():
     except Exception as e:
         print(f" [DB SETUP NOTICE] Could not pre-create MySQL database: {e}")
 
-    # Robust Fallback: Check DATABASE_URL first, otherwise construct from individual variables
-    db_url = os.getenv('DATABASE_URL')
+    # Check DATABASE_URL, then MYSQL_URL (Railway default), then fallback to individual components
+    db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_URL')
     if not db_url or db_url.strip() == '':
         db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
 
