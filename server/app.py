@@ -23,11 +23,11 @@ def create_app():
     app.secret_key = os.getenv('SECRET_KEY', 'secret123')
 
     # Automatically ensure MySQL database exists before initializing SQLAlchemy (Supports Railway & Local envs)
-    db_user = os.getenv('MYSQLUSER', os.getenv('DB_USER', 'root'))
-    db_password = os.getenv('MYSQLPASSWORD', os.getenv('DB_PASSWORD', 'root123'))
-    db_host = os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost'))
-    db_port = os.getenv('MYSQLPORT', '3306')
-    db_name = os.getenv('MYSQLDATABASE', 'creator_ops')
+    db_user = os.getenv('MYSQL_USER', os.getenv('MYSQLUSER', os.getenv('DB_USER', 'root')))
+    db_password = os.getenv('MYSQL_PASSWORD', os.getenv('MYSQLPASSWORD', os.getenv('DB_PASSWORD', 'root123')))
+    db_host = os.getenv('MYSQL_HOST', os.getenv('MYSQLHOST', os.getenv('DB_HOST', 'localhost')))
+    db_port = os.getenv('MYSQL_PORT', os.getenv('MYSQLPORT', '3306'))
+    db_name = os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', 'creator_ops'))
 
     db_host_port = f"{db_host}:{db_port}"
 
@@ -39,8 +39,8 @@ def create_app():
     except Exception as e:
         print(f" [DB SETUP NOTICE] Could not pre-create MySQL database: {e}")
 
-    # Check DATABASE_URL, then MYSQL_URL (Railway default), then fallback to individual components
-    db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_URL')
+    # Check DATABASE_URL, then MYSQL_PRIVATE_URL, then MYSQL_URL, then fallback to individual components
+    db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_PRIVATE_URL') or os.getenv('MYSQL_URL')
     if not db_url or db_url.strip() == '':
         db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
 
