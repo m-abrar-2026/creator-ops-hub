@@ -1,6 +1,7 @@
 from flask import Flask, redirect, request, jsonify, render_template, url_for, session
 from flask_apscheduler import APScheduler
 from flask_mail import Mail, Message
+
 try:
     from server.models import db, User, AffiliateLink, ClickEvent, ScheduledPost, Notification, Sponsorship
 except ImportError:
@@ -36,11 +37,13 @@ def create_app():
             conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name};"))
             conn.commit()
     except Exception as e:
-        print(f" [DB SETUP NOTICE] Could not pre-create MySQL database (Ensure MySQL service is running): {e}")
+        print(f" [DB SETUP NOTICE] Could not pre-create MySQL database: {e}")
 
-    # Configure MySQL database connection using PyMySQL
-    default_uri = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
-    db_url = os.getenv('DATABASE_URL', default_uri)
+    # Robust Fallback: Check DATABASE_URL first, otherwise construct from individual variables
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url or db_url.strip() == '':
+        db_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host_port}/{db_name}'
+
     if db_url.startswith('mysql://'):
         db_url = db_url.replace('mysql://', 'mysql+pymysql://', 1)
 
