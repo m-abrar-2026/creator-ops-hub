@@ -171,32 +171,55 @@ def create_app():
 
     @app.route('/')
     def home():
-        # Strictly require login check
+
+        print("SESSION DATA =", dict(session))
+
         if 'user_id' not in session:
+            print("NO USER IN SESSION")
             return redirect(url_for('login_page'))
 
         user_id = session.get('user_id')
+
         user = db.session.get(User, user_id)
+
         if not user:
+            print("USER NOT FOUND")
             session.clear()
             return redirect(url_for('login_page'))
 
+        print("USER LOGGED IN =", user.username)
+
         try:
-            total_clicks = db.session.query(db.func.sum(AffiliateLink.click_count)).scalar() or 0
+            total_clicks = db.session.query(
+                db.func.sum(AffiliateLink.click_count)
+            ).scalar() or 0
+
             active_links_count = AffiliateLink.query.count()
-            top_link = AffiliateLink.query.order_by(AffiliateLink.click_count.desc()).first()
-            recent_links = AffiliateLink.query.order_by(AffiliateLink.id.desc()).limit(5).all()
+
+            top_link = AffiliateLink.query.order_by(
+                AffiliateLink.click_count.desc()
+            ).first()
+
+            recent_links = AffiliateLink.query.order_by(
+                AffiliateLink.id.desc()
+            ).limit(5).all()
+
         except Exception as e:
             db.session.rollback()
-            print(f" [HOME ERROR] {e}")
-            total_clicks, active_links_count, top_link, recent_links = 0, 0, None, []
+            print("[HOME ERROR]", e)
 
-        return render_template('dashboard.html',
-                               total_clicks=total_clicks,
-                               active_links_count=active_links_count,
-                               top_link=top_link,
-                               recent_links=recent_links)
+            total_clicks = 0
+            active_links_count = 0
+            top_link = None
+            recent_links = []
 
+        return render_template(
+            'dashboard.html',
+            total_clicks=total_clicks,
+            active_links_count=active_links_count,
+            top_link=top_link,
+            recent_links=recent_links
+        )
     @app.route('/login', methods=['GET', 'POST'])
     def login_page():
         if request.method == 'POST':
