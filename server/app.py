@@ -81,17 +81,16 @@ def create_app():
     scheduler.start()
 
     def get_valid_user_id():
-        """Auto-healing helper: ensures session user exists in DB, or auto-creates a default user."""
+        """Ensures session user exists in DB. Auto-creates a fallback user if database is out of sync."""
         user_id = session.get('user_id')
         if user_id:
             user = db.session.get(User, user_id)
             if user:
                 return user.id
 
-        # Fallback: check if any user exists in the database
+        # Fallback: Find any existing user or create a safe default admin user
         user = User.query.first()
         if not user:
-            # Auto-create a default admin user so foreign keys never fail
             try:
                 user = User(
                     username="CreatorAdmin",
@@ -101,10 +100,9 @@ def create_app():
                 )
                 db.session.add(user)
                 db.session.commit()
-                print(" [DB AUTO-HEAL] Created default admin user.")
             except Exception as e:
                 db.session.rollback()
-                print(f" [DB AUTO-HEAL ERROR] {e}")
+                print(f" [AUTO-HEAL ERROR] {e}")
                 user = User.query.first()
 
         if user:
@@ -171,8 +169,6 @@ def create_app():
                             mail.send(msg)
                         except Exception as e:
                             print(f" [EMAIL ERROR] {e}")
-
-                print(f" [AUTO-PUBLISH API] Successfully pushed post '{post.title}' to {post.platform}!")
 
     @app.route('/')
     def home():
@@ -298,7 +294,12 @@ def create_app():
                         return redirect(url_for('links_page'))
                 except Exception as e:
                     db.session.rollback()
-                    error = f"Database error: {str(e)}"
+                    # Catch foreign key constraint 1452 explicitly and auto-correct session
+                    if "1452" in str(e) or "foreign key constraint" in str(e).lower():
+                        session.clear()
+                        error = "Session state mismatch detected. Please log in again to refresh your account binding."
+                    else:
+                        error = f"Database error: {str(e)}"
                     print(f" [LINKS ERROR] {e}")
 
         try:
@@ -497,7 +498,7 @@ def create_app():
 
         if request.method == 'POST':
             try:
-                email_notifications = True if request.form.get('email_notifications') == 'true' else False
+                email_notifications = True if request.form.get('email_notifications'] == 'true' else False
                 user.email_notifications = email_notifications
                 db.session.commit()
             except Exception as e:
