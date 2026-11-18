@@ -574,6 +574,35 @@ def create_app():
             print(f" [DELETE SPONSORSHIP ERROR] {e}")
         return redirect(url_for('finance_page'))
 
+    @app.route('/debug/db', methods=['GET'])
+    def debug_database():
+        try:
+            # Test connection and check existing tables
+            inspector = db.inspect(db.engine)
+            tables = inspector.get_table_names()
+
+            # Fetch summary of records in each main table
+            user_count = User.query.count()
+            link_count = AffiliateLink.query.count()
+            all_links = [{"id": l.id, "title": l.title, "slug": l.slug, "user_id": l.user_id} for l in
+                         AffiliateLink.query.all()]
+            all_users = [{"id": u.id, "username": u.username, "email": u.email} for u in User.query.all()]
+
+            return jsonify({
+                "status": "connected",
+                "tables": tables,
+                "user_count": user_count,
+                "users": all_users,
+                "link_count": link_count,
+                "links": all_links
+            }), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                "status": "error",
+                "message": str(e)
+            }), 500
+
     return app
 
 
