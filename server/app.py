@@ -529,9 +529,17 @@ def create_app():
     @app.route('/logout')
     def logout():
         print("LOGOUT EXECUTED")
-        session.clear()
-        return redirect(url_for('login_page'))
 
+        session.pop('user_id', None)
+        session.pop('username', None)
+        session.clear()
+
+        response = redirect(url_for('login_page'))
+
+        response.set_cookie('session', '', expires=0)
+        response.delete_cookie('session')
+
+        return response
     @app.route('/r/<slug>')
     def redirect_to_target(slug):
         try:
