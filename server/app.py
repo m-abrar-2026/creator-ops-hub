@@ -34,7 +34,6 @@ def create_app():
 
     db_url = raw_db_url.strip()
 
-    # Railway may provide mysql://
     if db_url.startswith("mysql://"):
         db_url = db_url.replace(
             "mysql://",
@@ -45,7 +44,6 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Startup Debug Logging: Print safe connection string with password masked
     safe_log_url = db_url
     if '@' in safe_log_url and '://' in safe_log_url:
         prefix, remainder = safe_log_url.split('://', 1)
@@ -55,7 +53,6 @@ def create_app():
             safe_log_url = f"{prefix}://{user}:******@{host_part}"
     print(f" [DB CONFIG] Active SQLAlchemy Database URI: {safe_log_url}")
 
-    # Configure Flask-Mail (Using Gmail SMTP)
     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
@@ -63,11 +60,9 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', 'mlij medl nptm rrxb')
     app.config['MAIL_DEFAULT_SENDER'] = ('CreatorOps Hub', 'createropshub@gmail.com')
 
-    # Initialize extensions
     db.init_app(app)
     mail = Mail(app)
 
-    # Automatically create all tables on startup for production/Railway safely
     with app.app_context():
         try:
             db.create_all()
@@ -75,27 +70,23 @@ def create_app():
         except Exception as e:
             print(f" [DB ERROR] Could not create tables: {e}")
 
-    # Initialize Groq Client safely
     groq_client = None
     try:
         groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
     except Exception as e:
         print(f" [GROQ NOTICE] Groq client initialization warning: {e}")
 
-    # Initialize APScheduler
     scheduler = APScheduler()
     scheduler.init_app(app)
     scheduler.start()
 
-    # Context processor with safe error handling to prevent 500 rollbacks
     @app.context_processor
     def inject_notifications():
         user_notifications = []
         if 'user_id' in session:
             try:
                 user_id = session.get('user_id')
-                db_notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.id.desc()).limit(
-                    5).all()
+                db_notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.id.desc()).limit(5).all()
                 user_notifications = [
                     {"title": n.title, "message": n.message} for n in db_notifications
                 ]
@@ -104,13 +95,11 @@ def create_app():
                 print(f" [NOTIF ERROR] {e}")
         return dict(notifications=user_notifications)
 
-    # Global Error Handlers for robust transaction rollbacks
     @app.errorhandler(500)
     def internal_error(error):
         db.session.rollback()
         return "An internal server error occurred. Database transaction rolled back.", 500
 
-    # Upgraded Background Task: Auto-Publishing Simulation + In-App Alerts + Email
     @scheduler.task('interval', id='publish_scheduled_posts', seconds=60, misfire_grace_time=900)
     def background_publish_job():
         with app.app_context():
@@ -151,19 +140,25 @@ def create_app():
 
                 print(f" [AUTO-PUBLISH API] Successfully pushed post '{post.title}' to {post.platform}!")
 
-    # ==========================================
-    # PAGE ROUTING & WEB FORM HANDLERS
-    # ==========================================
-
     @app.route('/')
     def home():
         if 'user_id' not in session:
             return redirect(url_for('login_page'))
 
-        total_clicks = db.session.query(db.func.sum(AffiliateLink.click_count)).scalar() or 0
-        active_links_count = AffiliateLink.query.count()
-        top_link = AffiliateLink.query.order_by(AffiliateLink.click_count.desc()).first()
-        recent_links = AffiliateLink.query.order_by(AffiliateLink.id.desc()).limit(5).all()
+        user_id = session.get('user_id')
+        if not db.session.get(User, user_id):
+            session.clear()
+            return redirect(url_for('login_page'))
+
+        try:
+            total_clicks = db.session.query(db.func.sum(AffiliateLink.click_count)).scalar() or 0
+            active_links_count = AffiliateLink.query.count()
+            top_link = AffiliateLink.query.order_by(AffiliateLink.click_count.desc()).first()
+            recent_links = AffiliateLink.query.order_by(AffiliateLink.id.desc()).limit(5).all()
+        except Exception as e:
+            db.session.rollback()
+            print(f" [HOME ERROR] {e}")
+            total_clicks, active_links_count, top_link, recent_links = 0, 0, None, []
 
         return render_template('dashboard.html',
                                total_clicks=total_clicks,
@@ -213,7 +208,6 @@ def create_app():
                 db.session.add(new_user)
                 db.session.commit()
 
-                # Redirect to login page instead of auto-logging in
                 return redirect(url_for('login_page'))
             except Exception as e:
                 db.session.rollback()
@@ -249,17 +243,25 @@ def create_app():
             return redirect(url_for('login_page'))
 
         user_id = session.get('user_id')
+        user = db.session.get(User, user_id)
+        if not user:
+            session.clear()
+            return redirect(url_for('login_page'))
 
+        error = None
         if request.method == 'POST':
             title = request.form.get('title')
             slug = request.form.get('slug')
             destination_url = request.form.get('destination_url')
 
-            if title and slug and destination_url:
+            if not title or not slug or not destination_url:
+                error = "All fields are required."
+            else:
                 try:
-                    # Check if slug already exists to prevent integrity crash
-                    existing_link = AffiliateLink.query.filter_by(slug=slug).first()
-                    if not existing_link:
+                    existing = AffiliateLink.query.filter_by(slug=slug).first()
+                    if existing:
+                        error = f"Slug '{slug}' is already taken. Please choose another."
+                    else:
                         new_link = AffiliateLink(
                             title=title,
                             slug=slug,
@@ -268,30 +270,29 @@ def create_app():
                         )
                         db.session.add(new_link)
                         db.session.commit()
-                        print(f" [LINK CREATED] Successfully added slug: {slug}")
-                    else:
-                        print(f" [LINK ERROR] Slug '{slug}' already exists.")
+                        return redirect(url_for('links_page'))
                 except Exception as e:
                     db.session.rollback()
+                    error = f"Database error: {str(e)}"
                     print(f" [LINKS ERROR] {e}")
 
-            return redirect(url_for('links_page'))
-
         try:
-            # Fetch all active affiliate links to display in the table
             links = AffiliateLink.query.order_by(AffiliateLink.id.desc()).all()
         except Exception as e:
             db.session.rollback()
-            print(f" [LINKS FETCH ERROR] {e}")
             links = []
 
-        return render_template('links.html', links=links)
+        return render_template('links.html', links=links, error=error)
     @app.route('/view/scheduler', methods=['GET', 'POST'])
     def scheduler_page():
         if 'user_id' not in session:
             return redirect(url_for('login_page'))
 
-        user_id = session.get('user_id', 1)
+        user_id = session.get('user_id')
+        if not db.session.get(User, user_id):
+            session.clear()
+            return redirect(url_for('login_page'))
+
         if request.method == 'POST':
             title = request.form.get('title')
             platform = request.form.get('platform')
@@ -326,7 +327,7 @@ def create_app():
             return redirect(url_for('scheduler_page'))
 
         try:
-            posts = ScheduledPost.query.all()
+            posts = ScheduledPost.query.order_by(ScheduledPost.id.desc()).all()
         except Exception as e:
             db.session.rollback()
             posts = []
@@ -335,6 +336,11 @@ def create_app():
     @app.route('/view/ai-generator', methods=['GET', 'POST'])
     def ai_generator_page():
         if 'user_id' not in session:
+            return redirect(url_for('login_page'))
+
+        user_id = session.get('user_id')
+        if not db.session.get(User, user_id):
+            session.clear()
             return redirect(url_for('login_page'))
 
         generated_result = None
@@ -402,13 +408,16 @@ def create_app():
 
         return render_template('ai_generator.html', result=generated_result)
 
-    # Sponsorship & Revenue Tracker Routes
     @app.route('/view/finance', methods=['GET', 'POST'])
     def finance_page():
         if 'user_id' not in session:
             return redirect(url_for('login_page'))
 
-        user_id = session.get('user_id', 1)
+        user_id = session.get('user_id')
+        if not db.session.get(User, user_id):
+            session.clear()
+            return redirect(url_for('login_page'))
+
         if request.method == 'POST':
             brand_name = request.form.get('brand_name')
             deal_title = request.form.get('deal_title')
@@ -433,7 +442,7 @@ def create_app():
             return redirect(url_for('finance_page'))
 
         try:
-            deals = Sponsorship.query.all()
+            deals = Sponsorship.query.order_by(Sponsorship.id.desc()).all()
         except Exception as e:
             db.session.rollback()
             deals = []
@@ -466,14 +475,10 @@ def create_app():
         if 'user_id' not in session:
             return redirect(url_for('login_page'))
 
-        user_id = session.get('user_id', 1)
-        try:
-            user = db.session.get(User, user_id)
-        except Exception as e:
-            db.session.rollback()
-            user = None
-
+        user_id = session.get('user_id')
+        user = db.session.get(User, user_id)
         if not user:
+            session.clear()
             return redirect(url_for('login_page'))
 
         if request.method == 'POST':
@@ -488,7 +493,6 @@ def create_app():
 
         return render_template('profile.html', user=user)
 
-    # API endpoint to power Chart.js analytics time-series graph
     @app.route('/api/chart-analytics', methods=['GET'])
     def chart_analytics_api():
         try:

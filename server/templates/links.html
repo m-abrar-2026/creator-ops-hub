@@ -3,6 +3,13 @@
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4 space-y-8">
 
+    <!-- Error Banner if something fails -->
+    {% if error %}
+    <div class="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-2xl text-sm font-bold shadow-sm">
+        ⚠️ {{ error }}
+    </div>
+    {% endif %}
+
     <!-- Page Header / Form Card -->
     <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
         <h3 class="text-lg font-bold text-slate-900 tracking-tight mb-6 pb-4 border-b border-gray-100">Create New Link</h3>
