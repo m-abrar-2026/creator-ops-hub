@@ -29,8 +29,6 @@ def create_app():
             or os.getenv("MYSQL_URL")
     )
 
-
-
     if not raw_db_url:
         raise Exception("No database URL found")
 
@@ -47,19 +45,6 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Safe logging
-    safe_log_url = db_url
-
-    if "@" in safe_log_url and "://" in safe_log_url:
-        prefix, remainder = safe_log_url.split("://", 1)
-        credentials, host_part = remainder.split("@", 1)
-
-        if ":" in credentials:
-            user = credentials.split(":", 1)[0]
-            safe_log_url = f"{prefix}://{user}:******@{host_part}"
-
-    print("[DB CONFIG]", safe_log_url)
-
     # Startup Debug Logging: Print safe connection string with password masked
     safe_log_url = db_url
     if '@' in safe_log_url and '://' in safe_log_url:
@@ -69,7 +54,6 @@ def create_app():
             user = credentials.split(':', 1)[0]
             safe_log_url = f"{prefix}://{user}:******@{host_part}"
     print(f" [DB CONFIG] Active SQLAlchemy Database URI: {safe_log_url}")
-
 
     # Configure Flask-Mail (Using Gmail SMTP)
     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
@@ -229,9 +213,8 @@ def create_app():
                 db.session.add(new_user)
                 db.session.commit()
 
-                session['user_id'] = new_user.id
-                session['username'] = new_user.username
-                return redirect(url_for('home'))
+                # Redirect to login page instead of auto-logging in
+                return redirect(url_for('login_page'))
             except Exception as e:
                 db.session.rollback()
                 print(f" [SIGNUP ERROR] {e}")
