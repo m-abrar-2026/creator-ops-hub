@@ -294,7 +294,6 @@ def create_app():
                         return redirect(url_for('links_page'))
                 except Exception as e:
                     db.session.rollback()
-                    # Auto-heal session state instead of throwing hard error
                     session['user_id'] = get_valid_user_id()
                     error = f"Database error encountered and recovered. Please try submitting again."
                     print(f" [LINKS ERROR RECOVERED] {e}")
