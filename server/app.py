@@ -528,6 +528,7 @@ def create_app():
 
     @app.route('/logout')
     def logout():
+        print("LOGOUT EXECUTED")
         session.clear()
         return redirect(url_for('login_page'))
 
