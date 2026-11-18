@@ -294,10 +294,9 @@ def create_app():
                         return redirect(url_for('links_page'))
                 except Exception as e:
                     db.session.rollback()
-                    # Catch foreign key constraint 1452 explicitly and auto-correct session
                     if "1452" in str(e) or "foreign key constraint" in str(e).lower():
                         session.clear()
-                        error = "Session state mismatch detected. Please log in again to refresh your account binding."
+                        error = "Session state mismatch detected. Please log in again."
                     else:
                         error = f"Database error: {str(e)}"
                     print(f" [LINKS ERROR] {e}")
@@ -498,7 +497,8 @@ def create_app():
 
         if request.method == 'POST':
             try:
-                email_notifications = True if request.form.get('email_notifications'] == 'true' else False
+                # Fixed parenthesis typo here:
+                email_notifications = True if request.form.get('email_notifications') == 'true' else False
                 user.email_notifications = email_notifications
                 db.session.commit()
             except Exception as e:
@@ -575,7 +575,7 @@ def create_app():
                 db.session.commit()
         except Exception as e:
             db.session.rollback()
-            print(f" [DELETE SPONSORSHIP ERROR] {e}")
+            print(f" [FINANCE DELETE ERROR] {e}")
         return redirect(url_for('finance_page'))
 
     return app
