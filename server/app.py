@@ -248,7 +248,8 @@ def create_app():
         if 'user_id' not in session:
             return redirect(url_for('login_page'))
 
-        user_id = session.get('user_id', 1)
+        user_id = session.get('user_id')
+
         if request.method == 'POST':
             title = request.form.get('title')
             slug = request.form.get('slug')
@@ -256,7 +257,9 @@ def create_app():
 
             if title and slug and destination_url:
                 try:
-                    if not AffiliateLink.query.filter_by(slug=slug).first():
+                    # Check if slug already exists to prevent integrity crash
+                    existing_link = AffiliateLink.query.filter_by(slug=slug).first()
+                    if not existing_link:
                         new_link = AffiliateLink(
                             title=title,
                             slug=slug,
@@ -265,18 +268,24 @@ def create_app():
                         )
                         db.session.add(new_link)
                         db.session.commit()
+                        print(f" [LINK CREATED] Successfully added slug: {slug}")
+                    else:
+                        print(f" [LINK ERROR] Slug '{slug}' already exists.")
                 except Exception as e:
                     db.session.rollback()
                     print(f" [LINKS ERROR] {e}")
+
             return redirect(url_for('links_page'))
 
         try:
-            links = AffiliateLink.query.all()
+            # Fetch all active affiliate links to display in the table
+            links = AffiliateLink.query.order_by(AffiliateLink.id.desc()).all()
         except Exception as e:
             db.session.rollback()
+            print(f" [LINKS FETCH ERROR] {e}")
             links = []
-        return render_template('links.html', links=links)
 
+        return render_template('links.html', links=links)
     @app.route('/view/scheduler', methods=['GET', 'POST'])
     def scheduler_page():
         if 'user_id' not in session:
