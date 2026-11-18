@@ -245,30 +245,22 @@ def create_app():
 
     @app.route('/links', methods=['GET', 'POST'])
     def links_page():
+
+        print("ENTERED LINKS PAGE")
+
         if 'user_id' not in session:
             return redirect(url_for('login_page'))
 
-        user_id = session.get('user_id', 1)
+        user_id = session.get('user_id')
+
         if request.method == 'POST':
             title = request.form.get('title')
             slug = request.form.get('slug')
             destination_url = request.form.get('destination_url')
 
-            print("TITLE =", title)
-            print("SLUG =", slug)
-            print("URL =", destination_url)
-            print("SESSION =", dict(session))
-
             try:
 
-                user_id = session.get('user_id')
-
-                print("USER_ID =", user_id)
-
-                existing = AffiliateLink.query.filter_by(slug=slug).first()
-
-                if existing:
-                    return f"Slug already exists: {slug}"
+                print("CREATING LINK")
 
                 new_link = AffiliateLink(
                     title=title,
@@ -286,8 +278,29 @@ def create_app():
 
             except Exception as e:
                 db.session.rollback()
-                print("❌ LINKS ERROR:", str(e))
-                return f"LINK ERROR: {str(e)}"
+                print("❌ LINK INSERT ERROR:", e)
+                return str(e)
+
+        try:
+            print("LOADING LINKS")
+
+            links = AffiliateLink.query.filter_by(
+                user_id=user_id
+            ).all()
+
+            print("LINK COUNT =", len(links))
+
+            return render_template(
+                'links.html',
+                links=links
+            )
+
+        except Exception as e:
+            db.session.rollback()
+
+            print("❌ LINK PAGE ERROR:", e)
+
+            return str(e)
     @app.route('/view/scheduler', methods=['GET', 'POST'])
     def scheduler_page():
         if 'user_id' not in session:
