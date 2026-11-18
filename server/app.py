@@ -220,24 +220,41 @@ def create_app():
             top_link=top_link,
             recent_links=recent_links
         )
+
     @app.route('/login', methods=['GET', 'POST'])
     def login_page():
+
+        print("LOGIN SESSION =", dict(session))
+
         if request.method == 'POST':
             identifier = request.form.get('username')
             password = request.form.get('password')
 
             try:
-                user = User.query.filter((User.username == identifier) | (User.email == identifier)).first()
+                user = User.query.filter(
+                    (User.username == identifier) |
+                    (User.email == identifier)
+                ).first()
+
                 if user and check_password_hash(user.password_hash, password):
                     session['user_id'] = user.id
                     session['username'] = user.username
+
                     return redirect(url_for('home'))
+
             except Exception as e:
                 db.session.rollback()
-                print(f" [LOGIN ERROR] {e}")
-                return render_template('login.html', error="Database error occurred. Please try again.")
+                print(f"[LOGIN ERROR] {e}")
 
-            return render_template('login.html', error="Invalid username or password")
+                return render_template(
+                    'login.html',
+                    error="Database error occurred. Please try again."
+                )
+
+            return render_template(
+                'login.html',
+                error="Invalid username or password"
+            )
 
         return render_template('login.html')
 
@@ -551,16 +568,21 @@ def create_app():
 
     @app.route('/logout')
     def logout():
-        print("LOGOUT EXECUTED")
 
-        session.pop('user_id', None)
-        session.pop('username', None)
+        print("BEFORE LOGOUT =", dict(session))
+
         session.clear()
 
         response = redirect(url_for('login_page'))
 
-        response.set_cookie('session', '', expires=0)
-        response.delete_cookie('session')
+        response.set_cookie(
+            "session",
+            "",
+            expires=0,
+            path="/"
+        )
+
+        print("AFTER LOGOUT =", dict(session))
 
         return response
     @app.route('/r/<slug>')
