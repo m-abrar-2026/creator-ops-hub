@@ -542,7 +542,6 @@ def create_app():
         except Exception as e:
             db.session.rollback()
             return "Link not found or error occurred", 404
-
     @app.route('/links/delete/<int:link_id>', methods=['POST'])
     def delete_link(link_id):
         if not get_valid_user_id():
