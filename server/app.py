@@ -254,29 +254,40 @@ def create_app():
             slug = request.form.get('slug')
             destination_url = request.form.get('destination_url')
 
-            if title and slug and destination_url:
-                try:
-                    if not AffiliateLink.query.filter_by(slug=slug).first():
-                        new_link = AffiliateLink(
-                            title=title,
-                            slug=slug,
-                            destination_url=destination_url,
-                            user_id=user_id
-                        )
-                        db.session.add(new_link)
-                        db.session.commit()
-                except Exception as e:
-                    db.session.rollback()
-                    print(f" [LINKS ERROR] {e}")
-            return redirect(url_for('links_page'))
+            print("TITLE =", title)
+            print("SLUG =", slug)
+            print("URL =", destination_url)
+            print("SESSION =", dict(session))
 
-        try:
-            links = AffiliateLink.query.all()
-        except Exception as e:
-            db.session.rollback()
-            links = []
-        return render_template('links.html', links=links)
+            try:
 
+                user_id = session.get('user_id')
+
+                print("USER_ID =", user_id)
+
+                existing = AffiliateLink.query.filter_by(slug=slug).first()
+
+                if existing:
+                    return f"Slug already exists: {slug}"
+
+                new_link = AffiliateLink(
+                    title=title,
+                    slug=slug,
+                    destination_url=destination_url,
+                    user_id=user_id
+                )
+
+                db.session.add(new_link)
+                db.session.commit()
+
+                print("✅ LINK SAVED")
+
+                return redirect(url_for('links_page'))
+
+            except Exception as e:
+                db.session.rollback()
+                print("❌ LINKS ERROR:", str(e))
+                return f"LINK ERROR: {str(e)}"
     @app.route('/view/scheduler', methods=['GET', 'POST'])
     def scheduler_page():
         if 'user_id' not in session:
