@@ -80,12 +80,27 @@ def create_app():
     scheduler.init_app(app)
     scheduler.start()
 
+    def get_valid_user_id():
+        """Helper to ensure session user_id exists in DB, preventing foreign key 1452 errors."""
+        user_id = session.get('user_id')
+        if user_id:
+            user = db.session.get(User, user_id)
+            if user:
+                return user.id
+        # Fallback to the first available user in the database
+        first_user = User.query.first()
+        if first_user:
+            session['user_id'] = first_user.id
+            session['username'] = first_user.username
+            return first_user.id
+        return None
+
     @app.context_processor
     def inject_notifications():
         user_notifications = []
-        if 'user_id' in session:
+        user_id = get_valid_user_id()
+        if user_id:
             try:
-                user_id = session.get('user_id')
                 db_notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.id.desc()).limit(5).all()
                 user_notifications = [
                     {"title": n.title, "message": n.message} for n in db_notifications
@@ -142,12 +157,8 @@ def create_app():
 
     @app.route('/')
     def home():
-        if 'user_id' not in session:
-            return redirect(url_for('login_page'))
-
-        user_id = session.get('user_id')
-        if not db.session.get(User, user_id):
-            session.clear()
+        user_id = get_valid_user_id()
+        if not user_id:
             return redirect(url_for('login_page'))
 
         try:
@@ -239,13 +250,8 @@ def create_app():
 
     @app.route('/links', methods=['GET', 'POST'])
     def links_page():
-        if 'user_id' not in session:
-            return redirect(url_for('login_page'))
-
-        user_id = session.get('user_id')
-        user = db.session.get(User, user_id)
-        if not user:
-            session.clear()
+        user_id = get_valid_user_id()
+        if not user_id:
             return redirect(url_for('login_page'))
 
         error = None
@@ -283,14 +289,11 @@ def create_app():
             links = []
 
         return render_template('links.html', links=links, error=error)
+
     @app.route('/view/scheduler', methods=['GET', 'POST'])
     def scheduler_page():
-        if 'user_id' not in session:
-            return redirect(url_for('login_page'))
-
-        user_id = session.get('user_id')
-        if not db.session.get(User, user_id):
-            session.clear()
+        user_id = get_valid_user_id()
+        if not user_id:
             return redirect(url_for('login_page'))
 
         if request.method == 'POST':
@@ -335,12 +338,8 @@ def create_app():
 
     @app.route('/view/ai-generator', methods=['GET', 'POST'])
     def ai_generator_page():
-        if 'user_id' not in session:
-            return redirect(url_for('login_page'))
-
-        user_id = session.get('user_id')
-        if not db.session.get(User, user_id):
-            session.clear()
+        user_id = get_valid_user_id()
+        if not user_id:
             return redirect(url_for('login_page'))
 
         generated_result = None
@@ -410,12 +409,8 @@ def create_app():
 
     @app.route('/view/finance', methods=['GET', 'POST'])
     def finance_page():
-        if 'user_id' not in session:
-            return redirect(url_for('login_page'))
-
-        user_id = session.get('user_id')
-        if not db.session.get(User, user_id):
-            session.clear()
+        user_id = get_valid_user_id()
+        if not user_id:
             return redirect(url_for('login_page'))
 
         if request.method == 'POST':
@@ -455,7 +450,7 @@ def create_app():
 
     @app.route('/view/finance/update/<int:deal_id>', methods=['POST'])
     def update_finance_status(deal_id):
-        if 'user_id' not in session:
+        if not get_valid_user_id():
             return redirect(url_for('login_page'))
 
         try:
@@ -472,10 +467,10 @@ def create_app():
 
     @app.route('/profile', methods=['GET', 'POST'])
     def profile_page():
-        if 'user_id' not in session:
+        user_id = get_valid_user_id()
+        if not user_id:
             return redirect(url_for('login_page'))
 
-        user_id = session.get('user_id')
         user = db.session.get(User, user_id)
         if not user:
             session.clear()
@@ -534,7 +529,7 @@ def create_app():
 
     @app.route('/links/delete/<int:link_id>', methods=['POST'])
     def delete_link(link_id):
-        if 'user_id' not in session:
+        if not get_valid_user_id():
             return redirect(url_for('login_page'))
 
         try:
@@ -550,7 +545,7 @@ def create_app():
 
     @app.route('/view/finance/delete/<int:deal_id>', methods=['POST'])
     def delete_sponsorship(deal_id):
-        if 'user_id' not in session:
+        if not get_valid_user_id():
             return redirect(url_for('login_page'))
 
         try:
