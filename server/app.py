@@ -81,18 +81,37 @@ def create_app():
     scheduler.start()
 
     def get_valid_user_id():
-        """Helper to ensure session user_id exists in DB, preventing foreign key 1452 errors."""
+        """Auto-healing helper: ensures session user exists in DB, or auto-creates a default user."""
         user_id = session.get('user_id')
         if user_id:
             user = db.session.get(User, user_id)
             if user:
                 return user.id
-        # Fallback to the first available user in the database
-        first_user = User.query.first()
-        if first_user:
-            session['user_id'] = first_user.id
-            session['username'] = first_user.username
-            return first_user.id
+
+        # Fallback: check if any user exists in the database
+        user = User.query.first()
+        if not user:
+            # Auto-create a default admin user so foreign keys never fail
+            try:
+                user = User(
+                    username="CreatorAdmin",
+                    email="admin@creatoropshub.com",
+                    password_hash=generate_password_hash("admin123"),
+                    email_notifications=False
+                )
+                db.session.add(user)
+                db.session.commit()
+                print(" [DB AUTO-HEAL] Created default admin user.")
+            except Exception as e:
+                db.session.rollback()
+                print(f" [DB AUTO-HEAL ERROR] {e}")
+                user = User.query.first()
+
+        if user:
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return user.id
+
         return None
 
     @app.context_processor
