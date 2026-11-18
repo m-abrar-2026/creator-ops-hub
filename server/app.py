@@ -88,7 +88,6 @@ def create_app():
             if user:
                 return user.id
 
-        # Grab the first available user in the database
         user = User.query.first()
         if not user:
             try:
@@ -172,8 +171,14 @@ def create_app():
 
     @app.route('/')
     def home():
-        user_id = get_valid_user_id()
-        if not user_id:
+        # Strictly require login check
+        if 'user_id' not in session:
+            return redirect(url_for('login_page'))
+
+        user_id = session.get('user_id')
+        user = db.session.get(User, user_id)
+        if not user:
+            session.clear()
             return redirect(url_for('login_page'))
 
         try:
@@ -542,6 +547,7 @@ def create_app():
         except Exception as e:
             db.session.rollback()
             return "Link not found or error occurred", 404
+
     @app.route('/links/delete/<int:link_id>', methods=['POST'])
     def delete_link(link_id):
         if not get_valid_user_id():
