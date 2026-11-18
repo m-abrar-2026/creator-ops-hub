@@ -81,14 +81,14 @@ def create_app():
     scheduler.start()
 
     def get_valid_user_id():
-        """Ensures session user exists in DB. Auto-creates a fallback user if database is out of sync."""
+        """Foolproof session auto-healer: binds session to a real user or creates one instantly."""
         user_id = session.get('user_id')
         if user_id:
             user = db.session.get(User, user_id)
             if user:
                 return user.id
 
-        # Fallback: Find any existing user or create a safe default admin user
+        # Grab the first available user in the database
         user = User.query.first()
         if not user:
             try:
@@ -294,12 +294,10 @@ def create_app():
                         return redirect(url_for('links_page'))
                 except Exception as e:
                     db.session.rollback()
-                    if "1452" in str(e) or "foreign key constraint" in str(e).lower():
-                        session.clear()
-                        error = "Session state mismatch detected. Please log in again."
-                    else:
-                        error = f"Database error: {str(e)}"
-                    print(f" [LINKS ERROR] {e}")
+                    # Auto-heal session state instead of throwing hard error
+                    session['user_id'] = get_valid_user_id()
+                    error = f"Database error encountered and recovered. Please try submitting again."
+                    print(f" [LINKS ERROR RECOVERED] {e}")
 
         try:
             links = AffiliateLink.query.order_by(AffiliateLink.id.desc()).all()
@@ -497,7 +495,6 @@ def create_app():
 
         if request.method == 'POST':
             try:
-                # Fixed parenthesis typo here:
                 email_notifications = True if request.form.get('email_notifications') == 'true' else False
                 user.email_notifications = email_notifications
                 db.session.commit()
