@@ -7,92 +7,215 @@
   <script>
     (function () {
       const saved = localStorage.getItem("creatorops_theme");
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      if (saved === "dark" || (!saved && prefersDark)) {
+      if (saved === "dark") {
         document.documentElement.classList.add("dark");
       } else {
         document.documentElement.classList.remove("dark");
+        if (!saved) {
+          localStorage.setItem("creatorops_theme", "light");
+        }
       }
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { darkMode: "class" };
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "creator-bg-light": "#f8fafc",
+            "creator-bg-dark": "#111111",
+            "creator-card-light": "#ffffff",
+            "creator-card-dark": "#1a1a1a",
+            "creator-border-light": "#e2e8f0",
+            "creator-border-dark": "#2d2d2d",
+            "creator-text-light": "#0f172a",
+            "creator-text-dark": "#f1f5f9",
+            "creator-muted-light": "#64748b",
+            "creator-muted-dark": "#9ca3af",
+          },
+        },
+      },
+    };
   </script>
+  <style>
+    body { -webkit-font-smoothing: antialiased; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #3f3f46; }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors">
+<body class="min-h-screen flex bg-creator-bg-light dark:bg-creator-bg-dark text-creator-text-light dark:text-creator-text-dark font-sans antialiased overflow-x-hidden transition-colors duration-200">
   {% if session.get('user_id') %}
-  <header class="sticky top-0 z-30 bg-indigo-900 text-white shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
+  <!-- Mobile Sidebar Backdrop -->
+  <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/50 z-30 lg:hidden"></div>
+
+  <!-- Sidebar -->
+  <aside
+    id="mainSidebar"
+    class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full lg:translate-x-0 bg-creator-card-light dark:bg-creator-card-dark border-r border-creator-border-light dark:border-creator-border-dark p-5 flex flex-col transition-transform duration-200"
+  >
+    <div class="flex items-center justify-between gap-2 mb-8 px-1">
+      <a href="{{ url_for('home') }}" class="flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-base shadow-sm">
+          C
+        </span>
+        <span class="text-lg font-black tracking-tight">CreatorOps Hub</span>
+      </a>
+      <button
+        type="button"
+        id="closeSidebarBtn"
+        aria-label="Close sidebar"
+        class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark"
+      >
+        ✕
+      </button>
+    </div>
+
+    <nav class="flex-1 space-y-1.5 text-sm font-semibold">
+      <a
+        href="{{ url_for('home') }}"
+        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {% if request.endpoint == 'home' %}bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+      >
+        <span>Dashboard</span>
+      </a>
+
+      <a
+        href="{{ url_for('links_page') }}"
+        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {% if request.endpoint == 'links_page' %}bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+      >
+        <span>Affiliate Links</span>
+      </a>
+
+      <a
+        href="{{ url_for('scheduler_page') }}"
+        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {% if request.endpoint == 'scheduler_page' %}bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+      >
+        <span>Scheduler</span>
+      </a>
+
+      <a
+        href="{{ url_for('ai_generator_page') }}"
+        class="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl transition {% if request.endpoint == 'ai_generator_page' %}bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+      >
+        <span>AI Generator</span>
+        <span class="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">New</span>
+      </a>
+
+      <a
+        href="{{ url_for('finance_page') }}"
+        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {% if request.endpoint == 'finance_page' %}bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+      >
+        <span>Finances</span>
+      </a>
+
+      <div class="my-3 border-t border-creator-border-light dark:border-creator-border-dark"></div>
+
+      <a
+        href="{{ url_for('profile_page') }}"
+        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition {% if request.endpoint == 'profile_page' %}bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+      >
+        <span>Settings & Profile</span>
+      </a>
+
+      <a
+        href="{{ url_for('logout') }}"
+        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+      >
+        <span>Logout</span>
+      </a>
+    </nav>
+
+    <div class="mt-auto pt-4 border-t border-creator-border-light dark:border-creator-border-dark">
+      <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-900/60">
+        <p class="text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Workspace Active</p>
+        <p class="text-xs text-creator-muted-light dark:text-creator-muted-dark mt-1">
+          Signed in as <strong class="text-creator-text-light dark:text-creator-text-dark">{{ session.get('username') }}</strong>
+        </p>
+      </div>
+    </div>
+  </aside>
+  {% endif %}
+
+  <!-- Main Content Shell -->
+  <div class="flex-1 flex flex-col min-w-0 {% if session.get('user_id') %}lg:pl-64{% endif %}">
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-20 h-16 bg-creator-card-light/95 dark:bg-creator-card-dark/95 backdrop-blur border-b border-creator-border-light dark:border-creator-border-dark px-4 sm:px-8 flex items-center justify-between gap-4 shrink-0">
+      <div class="flex items-center gap-3 min-w-0">
+        {% if session.get('user_id') %}
         <button
           type="button"
-          id="sidebarToggleBtn"
-          aria-label="Toggle sidebar"
-          class="w-9 h-9 rounded-xl flex items-center justify-center text-indigo-100 hover:bg-indigo-800/80 transition"
+          id="openSidebarBtn"
+          aria-label="Open sidebar"
+          class="lg:hidden w-9 h-9 rounded-xl bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark flex items-center justify-center text-sm font-bold"
         >
           ☰
         </button>
+        {% endif %}
+        <span class="text-sm font-bold text-creator-muted-light dark:text-creator-muted-dark truncate">
+          {% block topbar_title %}CreatorOps Hub{% endblock %}
+        </span>
       </div>
 
-      <nav class="hidden md:flex items-center gap-1 bg-indigo-950/60 p-1 rounded-full border border-indigo-700/50 text-xs sm:text-sm font-semibold">
-        <a href="{{ url_for('home') }}" class="px-4 py-1.5 rounded-full hover:bg-indigo-800/80 transition">Dashboard</a>
-        <a href="{{ url_for('links_page') }}" class="px-4 py-1.5 rounded-full hover:bg-indigo-800/80 transition">Links</a>
-        <a href="{{ url_for('scheduler_page') }}" class="px-4 py-1.5 rounded-full hover:bg-indigo-800/80 transition">Scheduler</a>
-        <a href="{{ url_for('ai_generator_page') }}" class="px-4 py-1.5 rounded-full hover:bg-indigo-800/80 transition">AI Generator</a>
-        <a href="{{ url_for('finance_page') }}" class="px-4 py-1.5 rounded-full hover:bg-indigo-800/80 transition">Finances</a>
-      </nav>
-
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-3 shrink-0">
+        <!-- Light / Dark Mode Toggle Button (Light default) -->
         <button
           type="button"
           id="themeToggleBtn"
-          aria-label="Toggle theme"
-          class="w-9 h-9 rounded-full bg-indigo-800/80 hover:bg-indigo-700 flex items-center justify-center transition"
+          aria-label="Toggle light and dark mode"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark text-xs font-bold hover:border-indigo-500 transition"
         >
-          <span class="dark:hidden">🌙</span>
-          <span class="hidden dark:inline">☀️</span>
+          <span class="dark:hidden">🌙 Dark</span>
+          <span class="hidden dark:inline">☀️ Light</span>
         </button>
 
+        {% if session.get('user_id') %}
+        <!-- Notifications Bell -->
         <div class="relative">
           <button
             type="button"
             id="notifBellBtn"
             aria-label="Notifications"
-            class="relative w-9 h-9 rounded-full bg-indigo-800/80 hover:bg-indigo-700 flex items-center justify-center transition"
+            class="relative w-9 h-9 rounded-full bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark flex items-center justify-center hover:border-indigo-500 transition"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             {% if notifications and notifications|length > 0 %}
-              <span class="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-amber-400"></span>
+              <span class="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-indigo-600"></span>
             {% endif %}
           </button>
 
           <div
             id="notifDropdown"
-            class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 shadow-xl p-3 z-50"
+            class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] rounded-2xl bg-creator-card-light dark:bg-creator-card-dark border border-creator-border-light dark:border-creator-border-dark shadow-xl p-3 z-50"
           >
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Notifications</span>
-              <span class="text-xs text-slate-400">{{ notifications|length if notifications else 0 }}</span>
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-creator-border-light dark:border-creator-border-dark">
+              <span class="text-xs font-bold uppercase tracking-wider text-creator-muted-light dark:text-creator-muted-dark">Notifications</span>
+              <span class="text-xs text-creator-muted-light dark:text-creator-muted-dark">{{ notifications|length if notifications else 0 }}</span>
             </div>
             <div class="space-y-2 max-h-60 overflow-y-auto">
               {% if notifications %}
                 {% for n in notifications %}
-                  <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 text-xs">
+                  <div class="p-2.5 rounded-xl bg-creator-bg-light dark:bg-creator-bg-dark text-xs">
                     <p class="font-bold">{{ n.title }}</p>
-                    <p class="text-slate-600 dark:text-slate-300 mt-0.5">{{ n.message }}</p>
+                    <p class="text-creator-muted-light dark:text-creator-muted-dark mt-0.5">{{ n.message }}</p>
                   </div>
                 {% endfor %}
               {% else %}
-                <p class="text-xs text-slate-400 py-3 text-center">No notifications yet.</p>
+                <p class="text-xs text-creator-muted-light dark:text-creator-muted-dark py-3 text-center">No notifications yet.</p>
               {% endif %}
             </div>
           </div>
         </div>
 
-        <a href="{{ url_for('profile_page') }}" class="flex items-center gap-2 pl-1.5 pr-3.5 py-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold transition">
+        <!-- Account Pill -->
+        <a
+          href="{{ url_for('profile_page') }}"
+          class="flex items-center gap-2 pl-1.5 pr-3.5 py-1 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold transition"
+        >
           {% if current_avatar %}
             <img src="{{ current_avatar }}" alt="Account" class="w-7 h-7 rounded-full object-cover" />
           {% else %}
@@ -102,58 +225,62 @@
           {% endif %}
           <span>Account</span>
         </a>
+        {% endif %}
       </div>
-    </div>
+    </header>
 
-    <div id="mobileNavDrawer" class="hidden bg-indigo-950/95 border-t border-indigo-800 px-4 py-3 space-y-1 text-sm font-semibold">
-      <a href="{{ url_for('home') }}" class="block px-3 py-2 rounded-xl hover:bg-indigo-800/70">Dashboard</a>
-      <a href="{{ url_for('links_page') }}" class="block px-3 py-2 rounded-xl hover:bg-indigo-800/70">Links</a>
-      <a href="{{ url_for('scheduler_page') }}" class="block px-3 py-2 rounded-xl hover:bg-indigo-800/70">Scheduler</a>
-      <a href="{{ url_for('ai_generator_page') }}" class="block px-3 py-2 rounded-xl hover:bg-indigo-800/70">AI Generator</a>
-      <a href="{{ url_for('finance_page') }}" class="block px-3 py-2 rounded-xl hover:bg-indigo-800/70">Finances</a>
-      <a href="{{ url_for('profile_page') }}" class="block px-3 py-2 rounded-xl hover:bg-indigo-800/70">Profile & Settings</a>
-      <a href="{{ url_for('logout') }}" class="block px-3 py-2 rounded-xl text-rose-300 hover:bg-indigo-800/70">Logout</a>
-    </div>
-  </header>
-  {% endif %}
+    <!-- Page Body -->
+    <main class="flex-1 px-4 sm:px-8 py-6">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="max-w-6xl mx-auto mb-6 space-y-2">
+            {% for category, message in messages %}
+              <div class="px-4 py-3 rounded-2xl text-sm font-semibold {% if category in ['error', 'danger'] %}bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200 border border-rose-200 dark:border-rose-900{% else %}bg-indigo-50 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-900{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
 
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="max-w-5xl mx-auto mb-4 space-y-2">
-          {% for category, message in messages %}
-            <div class="px-4 py-3 rounded-2xl text-sm font-semibold bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800">
-              {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+      {% block content %}{% endblock %}
+      {% block auth_content %}{% endblock %}
+    </main>
 
-    {% block content %}{% endblock %}
-    {% block auth_content %}{% endblock %}
-  </main>
-
-  <footer class="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
-    CreatorOps Hub Studio Workspace • Secure SSL Encrypted
-  </footer>
+    <!-- Footer -->
+    <footer class="py-5 text-center text-xs text-creator-muted-light dark:text-creator-muted-dark border-t border-creator-border-light dark:border-creator-border-dark bg-creator-card-light dark:bg-creator-card-dark shrink-0">
+      CreatorOps Hub Studio Workspace • Secure SSL Encrypted
+    </footer>
+  </div>
 
   <script>
-    const themeBtn = document.getElementById("themeToggleBtn");
-    if (themeBtn) {
-      themeBtn.addEventListener("click", () => {
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener("click", () => {
         const isDark = document.documentElement.classList.toggle("dark");
         localStorage.setItem("creatorops_theme", isDark ? "dark" : "light");
       });
     }
 
-    const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
-    const mobileNavDrawer = document.getElementById("mobileNavDrawer");
-    if (sidebarToggleBtn && mobileNavDrawer) {
-      sidebarToggleBtn.addEventListener("click", () => {
-        mobileNavDrawer.classList.toggle("hidden");
-      });
+    const openSidebarBtn = document.getElementById("openSidebarBtn");
+    const closeSidebarBtn = document.getElementById("closeSidebarBtn");
+    const mainSidebar = document.getElementById("mainSidebar");
+    const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
+    function setSidebarOpen(open) {
+      if (!mainSidebar || !sidebarBackdrop) return;
+      if (open) {
+        mainSidebar.classList.remove("-translate-x-full");
+        sidebarBackdrop.classList.remove("hidden");
+      } else {
+        mainSidebar.classList.add("-translate-x-full");
+        sidebarBackdrop.classList.add("hidden");
+      }
     }
+
+    if (openSidebarBtn) openSidebarBtn.addEventListener("click", () => setSidebarOpen(true));
+    if (closeSidebarBtn) closeSidebarBtn.addEventListener("click", () => setSidebarOpen(false));
+    if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
 
     const notifBellBtn = document.getElementById("notifBellBtn");
     const notifDropdown = document.getElementById("notifDropdown");

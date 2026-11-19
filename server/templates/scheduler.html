@@ -1,120 +1,143 @@
 {% extends "base.html" %}
 {% block title %}Content Scheduler - CreatorOps Hub{% endblock %}
+{% block topbar_title %}Content Scheduler{% endblock %}
+
 {% block content %}
-<div class="max-w-6xl mx-auto py-8 px-4 space-y-8">
+<div class="max-w-5xl mx-auto space-y-8">
+  <div class="bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 sm:p-8 shadow-sm transition-colors">
+    <h1 class="text-2xl font-black text-creator-text-light dark:text-creator-text-dark">Content Scheduler</h1>
+    <p class="text-sm text-creator-muted-light dark:text-creator-muted-dark mt-1">
+      Schedule your social posts and receive automated alerts when it is time to publish.
+    </p>
 
-    <!-- Page Header Card -->
-    <div class="relative bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white overflow-hidden shadow-xl border border-indigo-900/50">
-        <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        <div class="relative z-10">
-            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-800/80 text-indigo-200 uppercase tracking-wider mb-3 border border-indigo-700/50">
-                Automation Queue
-            </span>
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Content Scheduler</h1>
-            <p class="text-sm text-indigo-200/80 mt-1">Schedule your social posts and let automated background alerts notify you when it is time to publish.</p>
+    <form method="POST" action="{{ url_for('scheduler_page') }}" class="mt-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider mb-2">
+            POST TITLE
+          </label>
+          <input
+            type="text"
+            name="title"
+            required
+            placeholder="e.g., Police Pursuit Speed Run"
+            class="w-full p-3.5 bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark rounded-2xl text-sm text-creator-text-light dark:text-creator-text-dark focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+          />
         </div>
+
+        <div>
+          <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider mb-2">
+            TARGET PLATFORM
+          </label>
+          <select
+            name="platform"
+            required
+            class="w-full p-3.5 bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark rounded-2xl text-sm text-creator-text-light dark:text-creator-text-dark focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+          >
+            <option value="" disabled selected>Select Platform</option>
+            <option value="YouTube">YouTube</option>
+            <option value="Instagram">Instagram</option>
+            <option value="TikTok">TikTok</option>
+            <option value="Facebook">Facebook</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider mb-2">
+            SCHEDULED DATE
+          </label>
+          <input
+            type="date"
+            name="scheduled_date"
+            required
+            class="w-full p-3.5 bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark rounded-2xl text-sm text-creator-text-light dark:text-creator-text-dark focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider mb-2">
+            SCHEDULED TIME
+          </label>
+          <div class="flex gap-3">
+            <input
+              type="time"
+              name="scheduled_time"
+              required
+              class="flex-grow min-w-0 p-3.5 bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark rounded-2xl text-sm text-creator-text-light dark:text-creator-text-dark focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+            />
+            <select
+              name="ampm"
+              required
+              class="w-24 sm:w-28 p-3.5 bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark rounded-2xl text-sm font-bold text-creator-text-light dark:text-creator-text-dark focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+            >
+              <option value="AM">AM</option>
+              <option value="PM" selected>PM</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider mb-2">
+          CONTENT / CAPTION
+        </label>
+        <textarea
+          name="content"
+          rows="3"
+          required
+          placeholder="Write your post caption or notes here..."
+          class="w-full p-3.5 bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark rounded-2xl text-sm text-creator-text-light dark:text-creator-text-dark focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+        ></textarea>
+      </div>
+
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3 rounded-2xl text-sm font-bold shadow-sm transition"
+        >
+          Schedule Post →
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 sm:p-8 shadow-sm transition-colors">
+    <h2 class="text-xl font-black text-creator-text-light dark:text-creator-text-dark mb-6">Scheduled Queue</h2>
+
+    {% if posts %}
+    <div class="w-full overflow-x-auto max-h-80 overflow-y-auto">
+      <table class="w-full text-left border-collapse min-w-[540px]">
+        <thead>
+          <tr class="border-b border-creator-border-light dark:border-creator-border-dark text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider">
+            <th class="py-3 px-4">Title</th>
+            <th class="py-3 px-4">Platform</th>
+            <th class="py-3 px-4">Scheduled For</th>
+            <th class="py-3 px-4 text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-creator-border-light dark:divide-creator-border-dark text-sm">
+          {% for post in posts %}
+          <tr class="hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark/50 transition">
+            <td class="py-3.5 px-4 font-bold text-creator-text-light dark:text-creator-text-dark">{{ post.title }}</td>
+            <td class="py-3.5 px-4 text-creator-muted-light dark:text-creator-muted-dark">{{ post.platform }}</td>
+            <td class="py-3.5 px-4 text-xs text-creator-muted-light dark:text-creator-muted-dark whitespace-nowrap">{{ post.scheduled_for }}</td>
+            <td class="py-3.5 px-4 text-center whitespace-nowrap">
+              <span class="inline-block px-3 py-1 rounded-xl text-xs font-bold {% if post.status == 'published' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900{% else %}bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900{% endif %}">
+                {{ post.status | capitalize }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-
-    <!-- Create Scheduled Post Form -->
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8 transition-colors">
-        <h3 class="text-lg font-black text-slate-900 dark:text-white mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">Schedule New Post</h3>
-
-        <form method="POST" action="/view/scheduler" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Title -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Post Title</label>
-                    <input type="text" name="title" required placeholder="e.g., Morning Vlog Teaser" class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
-                </div>
-
-                <!-- Platform -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Target Platform</label>
-                    <select name="platform" required class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
-                        <option value="" disabled selected>Select Platform</option>
-                        <option value="YouTube">YouTube</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="Facebook">Facebook</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Separated Date and Time/AM-PM Inputs -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Scheduled Date Box -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Scheduled Date</label>
-                    <input type="date" name="scheduled_date" required class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
-                </div>
-
-                <!-- Scheduled Time & AM/PM Box -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Scheduled Time</label>
-                    <div class="flex gap-3">
-                        <input type="time" name="scheduled_time" required class="flex-grow min-w-0 p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
-                        <select name="ampm" required class="w-24 sm:w-28 p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
-                            <option value="AM">AM</option>
-                            <option value="PM" selected>PM</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Content / Caption -->
-            <div>
-                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Content / Caption</label>
-                <textarea name="content" rows="3" required placeholder="Write your post caption or notes here..." class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"></textarea>
-            </div>
-
-            <div class="flex justify-end">
-                <button type="submit" class="w-full sm:w-auto justify-center bg-slate-900 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white px-8 py-3.5 rounded-2xl text-sm font-bold shadow-lg transition flex items-center gap-2">
-                    <span>Schedule Post</span> →
-                </button>
-            </div>
-        </form>
+    {% else %}
+    <div class="text-center py-8">
+      <p class="text-sm text-creator-muted-light dark:text-creator-muted-dark">No content currently scheduled. Add your first post above!</p>
     </div>
-
-    <!-- Scheduled Posts Queue Table -->
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8 transition-colors">
-        <div class="flex items-center justify-between mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-lg font-black text-slate-900 dark:text-white">Scheduled Queue</h3>
-            <span class="text-xs font-bold text-slate-400">{{ posts|length if posts else 0 }} post(s)</span>
-        </div>
-
-        {% if posts %}
-        <div class="w-full overflow-x-auto max-h-80 overflow-y-auto custom-scrollbar">
-            <table class="w-full text-left border-collapse min-w-[540px]">
-                <thead class="sticky top-0 bg-white dark:bg-slate-900 z-10">
-                    <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        <th class="py-3 px-4">Title</th>
-                        <th class="py-3 px-4">Platform</th>
-                        <th class="py-3 px-4">Scheduled For</th>
-                        <th class="py-3 px-4 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                    {% for post in posts %}
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-950/50 transition">
-                        <td class="py-4 px-4 font-bold text-slate-900 dark:text-white">{{ post.title }}</td>
-                        <td class="py-4 px-4 text-slate-600 dark:text-slate-300">{{ post.platform }}</td>
-                        <td class="py-4 px-4 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{{ post.scheduled_for }}</td>
-                        <td class="py-4 px-4 text-center whitespace-nowrap">
-                            <span class="inline-block px-3 py-1 rounded-lg text-xs font-bold {% if post.status == 'published' %}bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900{% else %}bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900{% endif %}">
-                                {{ post.status | capitalize }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center py-12">
-            <p class="text-sm text-slate-400 dark:text-slate-500">No content currently scheduled. Add your first post above!</p>
-        </div>
-        {% endif %}
-    </div>
-
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

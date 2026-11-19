@@ -1,100 +1,63 @@
-<!DOCTYPE html>
-<html lang="en" class="">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - CreatorOps Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
-</head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex items-center justify-center p-4">
+{% extends "base.html" %}
+{% block title %}Login - CreatorOps Hub{% endblock %}
+{% block topbar_title %}Sign In{% endblock %}
 
-    <!-- Split-Card Container -->
-    <div class="w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden grid grid-cols-1 lg:grid-cols-2 transition-colors">
-
-        <!-- Left Side: Split Banner with Abstract Styling -->
-        <div class="relative bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 p-8 sm:p-12 flex flex-col justify-between text-white overflow-hidden">
-            <!-- Background Decorative Overlay / Grid -->
-            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
-            <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
-
-            <!-- Top Brand Header -->
-            <div class="relative z-10 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-black text-lg shadow-lg shadow-indigo-900/50">
-                    C
-                </div>
-                <span class="font-bold tracking-wide text-lg">CreatorOps Hub</span>
-            </div>
-
-            <!-- Center Context & Copy -->
-            <div class="relative z-10 my-12 space-y-4">
-                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-800/80 text-indigo-200 uppercase tracking-wider backdrop-blur-sm border border-indigo-700/50">
-                    WELCOME BACK
-                </span>
-                <h2 class="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-                    Login to Workspace
-                </h2>
-                <p class="text-sm text-indigo-200/80 leading-relaxed">
-                    Track your applications, analyze links, and accelerate your creator workflow with AI.
-                </p>
-            </div>
-
-            <!-- Bottom Feature Badges -->
-            <div class="relative z-10 space-y-2.5">
-                <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md text-xs font-medium text-indigo-100">
-                    Link Performance & Analytics
-                </div>
-                <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md text-xs font-medium text-indigo-100">
-                    Content Scheduling Automation
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Side: Login Form -->
-        <div class="p-8 sm:p-12 flex flex-col justify-between">
-            <div>
-                <!-- Heading -->
-                <div class="mb-8">
-                    <h2 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Login</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Enter your credentials to access your workspace.</p>
-                </div>
-
-                <!-- Error Alert Banner (Triggers on Wrong Password/Username) -->
-                {% if error %}
-                <div class="mb-6 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 rounded-xl text-xs font-bold text-center">
-                    {{ error }}
-                </div>
-                {% endif %}
-
-                <!-- Form -->
-                <form method="POST" action="/login" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Email or Username</label>
-                        <input type="text" name="username" required placeholder="name@example.com" class="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Password</label>
-                        <input type="password" name="password" required placeholder="••••••••" class="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
-                    </div>
-                    <div class="flex justify-end items-center text-xs">
-                        <a href="/forgot-password" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Forgot Password?</a>
-                    </div>
-                    <button type="submit" class="w-full bg-slate-900 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white py-3.5 rounded-xl text-sm font-bold shadow-lg transition flex items-center justify-center gap-2">
-                        <span>Login</span> →
-                    </button>
-                </form>
-            </div>
-
-            <!-- Footer Signup Prompt -->
-            <div class="mt-8 text-center">
-                <p class="text-xs text-slate-500 dark:text-slate-400">
-                    Don't have an account? <a href="/signup" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Signup</a>
-                </p>
-            </div>
-        </div>
-
+{% block auth_content %}
+<div class="min-h-[calc(100vh-14rem)] flex items-center justify-center py-8">
+  <div class="w-full max-w-md bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 sm:p-8 shadow-sm space-y-6 transition-colors">
+    <div class="space-y-1.5">
+      <h1 class="text-2xl font-black text-creator-text-light dark:text-creator-text-dark">Welcome back</h1>
+      <p class="text-sm text-creator-muted-light dark:text-creator-muted-dark">
+        Sign in to your CreatorOps Hub workspace.
+      </p>
     </div>
-</body>
-</html>
+
+    <form method="POST" action="{{ url_for('login') }}" class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider mb-2">
+          EMAIL OR USERNAME
+        </label>
+        <input
+          type="text"
+          name="email"
+          required
+          placeholder="Enter your email or username"
+          class="w-full p-3.5 bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark rounded-2xl text-sm text-creator-text-light dark:text-creator-text-dark focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+        />
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider">
+            PASSWORD
+          </label>
+          <a href="{{ url_for('forgot_password') }}" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+            Forgot password?
+          </a>
+        </div>
+        <input
+          type="password"
+          name="password"
+          required
+          placeholder="Enter your password"
+          class="w-full p-3.5 bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark rounded-2xl text-sm text-creator-text-light dark:text-creator-text-dark focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-2xl text-sm font-bold shadow-sm transition"
+      >
+        Sign In →
+      </button>
+    </form>
+
+    <div class="pt-4 border-t border-creator-border-light dark:border-creator-border-dark text-center text-sm text-creator-muted-light dark:text-creator-muted-dark">
+      Don't have an account?
+      <a href="{{ url_for('signup') }}" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+        Create one
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

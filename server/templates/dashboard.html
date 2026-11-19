@@ -1,79 +1,146 @@
 {% extends "base.html" %}
 {% block title %}Dashboard - CreatorOps Hub{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto py-8 px-4 space-y-8">
-  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-black text-slate-900 dark:text-white">Creator Dashboard</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Overview of your affiliate clicks, active links, and recent activity.</p>
+<div class="max-w-7xl mx-auto space-y-6">
+  <!-- Welcome Banner -->
+  <div class="bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition-colors">
+    <div class="space-y-2.5 max-w-xl">
+      <h1 class="text-2xl sm:text-3xl font-black text-creator-text-light dark:text-creator-text-dark">
+        Welcome back, {{ session.get('username') or 'Creator' }}
+      </h1>
+      <p class="text-sm text-creator-muted-light dark:text-creator-muted-dark">
+        Manage your affiliate links, scheduled posts, AI captions, and sponsorships in one place.
+      </p>
+      <div class="pt-2 flex flex-wrap gap-3">
+        <a
+          href="{{ url_for('links_page') }}"
+          class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-2xl text-sm font-bold shadow-sm transition"
+        >
+          + Create Link
+        </a>
+        <a
+          href="{{ url_for('scheduler_page') }}"
+          class="inline-flex items-center gap-2 bg-creator-bg-light dark:bg-creator-bg-dark hover:border-indigo-500 text-creator-text-light dark:text-creator-text-dark border border-creator-border-light dark:border-creator-border-dark px-5 py-2.5 rounded-2xl text-sm font-bold transition"
+        >
+          Schedule Post
+        </a>
+      </div>
     </div>
-    <a href="{{ url_for('links_page') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-sm transition text-center">
-      Generate Link
-    </a>
+
+    <div class="hidden md:flex items-center justify-center w-36 h-24 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/70 dark:border-indigo-900/60 shrink-0">
+      <svg class="w-11 h-11 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    </div>
   </div>
 
+  <!-- Summary KPI Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors">
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">TOTAL CLICKS</p>
-      <p class="text-3xl font-black text-slate-900 dark:text-white mt-2">{{ total_clicks }}</p>
+    <div class="bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 shadow-sm transition-colors">
+      <p class="text-xs font-bold uppercase tracking-wider text-creator-muted-light dark:text-creator-muted-dark">TOTAL CLICKS</p>
+      <p class="text-3xl font-black text-creator-text-light dark:text-creator-text-dark mt-2">{{ total_clicks }}</p>
     </div>
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors">
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">ACTIVE LINKS</p>
-      <p class="text-3xl font-black text-slate-900 dark:text-white mt-2">{{ active_links_count }}</p>
+
+    <div class="bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 shadow-sm transition-colors">
+      <p class="text-xs font-bold uppercase tracking-wider text-creator-muted-light dark:text-creator-muted-dark">ACTIVE LINKS</p>
+      <p class="text-3xl font-black text-creator-text-light dark:text-creator-text-dark mt-2">{{ active_links_count }}</p>
     </div>
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors">
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">TOP PERFORMING LINK</p>
+
+    <div class="bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 shadow-sm transition-colors">
+      <p class="text-xs font-bold uppercase tracking-wider text-creator-muted-light dark:text-creator-muted-dark">TOP PERFORMING LINK</p>
       <p class="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-2 truncate">
         {% if top_link %}{{ top_link.title }} ({{ top_link.click_count }}){% else %}No links yet{% endif %}
       </p>
     </div>
   </div>
 
-  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
-    <h2 class="text-xl font-black text-slate-900 dark:text-white mb-6">Click Analytics Over Time</h2>
+  <!-- Analytics Chart Card -->
+  <div class="bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 sm:p-8 shadow-sm transition-colors">
+    <div class="flex items-center justify-between gap-4 mb-6">
+      <h2 class="text-lg font-black text-creator-text-light dark:text-creator-text-dark">Click Analytics Overview</h2>
+      <span class="px-3 py-1 rounded-xl text-xs font-bold bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark text-creator-muted-light dark:text-creator-muted-dark">
+        Live Data
+      </span>
+    </div>
     <div class="w-full h-64">
       <canvas id="analyticsChart"></canvas>
     </div>
   </div>
 
-  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
-    <h2 class="text-xl font-black text-slate-900 dark:text-white mb-6">Recent Links</h2>
-    <div class="w-full overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider">
-            <th class="py-3 px-4">Title</th>
-            <th class="py-3 px-4">Tracking URL</th>
-            <th class="py-3 px-4">Clicks</th>
-            <th class="py-3 px-4 text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-          {% for link in recent_links %}
-          {% set short_url = url_for('redirect_to_target', slug=link.slug, _external=True) %}
-          <tr>
-            <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{{ link.title }}</td>
-            <td class="py-3.5 px-4 text-indigo-600 dark:text-indigo-400 break-all">{{ short_url }}</td>
-            <td class="py-3.5 px-4 font-semibold">{{ link.click_count }}</td>
-            <td class="py-3.5 px-4 text-right">
-              <button
-                type="button"
-                data-copy-url="{{ short_url }}"
-                onclick="copyAffiliateLink(this)"
-                class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
-              >
-                Copy Link
-              </button>
-            </td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="4" class="py-6 text-center text-slate-400">No recent links found.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <!-- Recent Links & Quick Actions -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 sm:p-8 shadow-sm transition-colors">
+      <div class="flex items-center justify-between gap-4 mb-6">
+        <h2 class="text-lg font-black text-creator-text-light dark:text-creator-text-dark">Recent Links</h2>
+        <a href="{{ url_for('links_page') }}" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+          View All →
+        </a>
+      </div>
+
+      <div class="w-full overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-creator-border-light dark:border-creator-border-dark text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider">
+              <th class="py-3 px-3">Title</th>
+              <th class="py-3 px-3">Tracking URL</th>
+              <th class="py-3 px-3">Clicks</th>
+              <th class="py-3 px-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-creator-border-light dark:divide-creator-border-dark text-sm">
+            {% for link in recent_links %}
+            {% set short_url = url_for('redirect_to_target', slug=link.slug, _external=True) %}
+            <tr class="hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark/50 transition">
+              <td class="py-3.5 px-3 font-bold text-creator-text-light dark:text-creator-text-dark">{{ link.title }}</td>
+              <td class="py-3.5 px-3 text-indigo-600 dark:text-indigo-400 break-all text-xs">{{ short_url }}</td>
+              <td class="py-3.5 px-3 font-semibold">{{ link.click_count }}</td>
+              <td class="py-3.5 px-3 text-right whitespace-nowrap">
+                <button
+                  type="button"
+                  data-copy-url="{{ short_url }}"
+                  onclick="copyAffiliateLink(this)"
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark hover:border-indigo-500 transition"
+                >
+                  Copy Link
+                </button>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="py-8 text-center text-sm text-creator-muted-light dark:text-creator-muted-dark">
+                No recent links found.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bg-creator-card-light dark:bg-creator-card-dark rounded-3xl border border-creator-border-light dark:border-creator-border-dark p-6 sm:p-8 shadow-sm space-y-3.5 transition-colors">
+      <h2 class="text-lg font-black text-creator-text-light dark:text-creator-text-dark mb-2">Quick Actions</h2>
+
+      <a href="{{ url_for('links_page') }}" class="flex items-center justify-between p-4 rounded-2xl bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark hover:border-indigo-500 transition">
+        <span class="text-sm font-bold">Manage Affiliate Links</span>
+        <span class="text-creator-muted-light dark:text-creator-muted-dark">→</span>
+      </a>
+
+      <a href="{{ url_for('scheduler_page') }}" class="flex items-center justify-between p-4 rounded-2xl bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark hover:border-indigo-500 transition">
+        <span class="text-sm font-bold">Schedule Content</span>
+        <span class="text-creator-muted-light dark:text-creator-muted-dark">→</span>
+      </a>
+
+      <a href="{{ url_for('ai_generator_page') }}" class="flex items-center justify-between p-4 rounded-2xl bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark hover:border-indigo-500 transition">
+        <span class="text-sm font-bold">Generate AI Captions</span>
+        <span class="text-creator-muted-light dark:text-creator-muted-dark">→</span>
+      </a>
+
+      <a href="{{ url_for('export_finance_csv') }}" class="flex items-center justify-between p-4 rounded-2xl bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark hover:border-indigo-500 transition">
+        <span class="text-sm font-bold">Export Finances CSV</span>
+        <span class="text-creator-muted-light dark:text-creator-muted-dark">→</span>
+      </a>
     </div>
   </div>
 </div>
@@ -105,7 +172,9 @@
   fetch("{{ url_for('chart_analytics_api') }}")
     .then((res) => res.json())
     .then((payload) => {
-      const ctx = document.getElementById("analyticsChart").getContext("2d");
+      const canvas = document.getElementById("analyticsChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
       new Chart(ctx, {
         type: "line",
         data: {
@@ -114,7 +183,7 @@
             label: "Clicks",
             data: payload.data || [],
             borderColor: "#4f46e5",
-            backgroundColor: "rgba(79, 70, 229, 0.15)",
+            backgroundColor: "rgba(79, 70, 229, 0.14)",
             fill: true,
             tension: 0.35
           }]
