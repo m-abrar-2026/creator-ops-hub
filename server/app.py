@@ -359,6 +359,13 @@ def create_app():
             scheduled_time = request.form.get('scheduled_time')
             ampm = request.form.get('ampm')
             content = request.form.get('content')
+            print("TITLE =", title)
+            print("PLATFORM =", platform)
+            print("DATE =", scheduled_date)
+            print("TIME =", scheduled_time)
+            print("AMPM =", ampm)
+            print("CONTENT =", content)
+            print("USER_ID =", user_id)
 
             if title and platform and scheduled_date and scheduled_time and ampm and content:
                 try:
@@ -382,8 +389,10 @@ def create_app():
                     db.session.commit()
                 except Exception as e:
                     db.session.rollback()
-                    print(f" [SCHEDULER ERROR] {e}")
-            return redirect(url_for('scheduler_page'))
+                    print("SCHEDULER ERROR:", str(e))
+                    return f"SCHEDULER ERROR: {str(e)}"
+                print(" SCHEDULED POST SAVED")
+
 
         try:
             posts = ScheduledPost.query.filter_by(user_id=user_id).order_by(ScheduledPost.scheduled_for.desc()).all()
