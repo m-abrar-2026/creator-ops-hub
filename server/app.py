@@ -126,16 +126,20 @@ def create_app():
     # Upgraded Background Task: Auto-Publishing Simulation + In-App Alerts + Email
     @scheduler.task('interval', id='publish_scheduled_posts', seconds=60, misfire_grace_time=900)
     def background_publish_job():
+        print("BACKGROUND JOB RUNNING")
+
         with app.app_context():
             now = datetime.datetime.now()
             due_posts = ScheduledPost.query.filter(
                 ScheduledPost.status == 'scheduled',
+
                 ScheduledPost.scheduled_for <= now
             ).all()
 
             for post in due_posts:
                 post.status = 'published'
                 db.session.commit()
+                print("FOUND POSTS:", len(due_posts))
 
                 user = db.session.get(User, post.user_id)
                 if user:
@@ -739,6 +743,7 @@ def create_app():
         except Exception as e:
             db.session.rollback()
             print("DELETE SCHEDULED POST ERROR:", e)
+
 
         return redirect(url_for('scheduler_page'))
 
