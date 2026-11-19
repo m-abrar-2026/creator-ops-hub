@@ -142,8 +142,8 @@
 
   <!-- Main Content Shell -->
   <div class="flex-1 flex flex-col min-w-0 w-full">
-    <!-- Top Bar -->
-    <header class="sticky top-0 z-20 h-16 bg-creator-card-light/95 dark:bg-creator-card-dark/95 backdrop-blur border-b border-creator-border-light dark:border-creator-border-dark px-4 sm:px-8 flex items-center justify-between gap-4 shrink-0">
+    <!-- Top Bar with Menu Button + Top Nav Links -->
+    <header class="sticky top-0 z-20 min-h-16 bg-creator-card-light/95 dark:bg-creator-card-dark/95 backdrop-blur border-b border-creator-border-light dark:border-creator-border-dark px-4 sm:px-8 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0">
       <div class="flex items-center gap-3 min-w-0">
         {% if session.get('user_id') %}
         <button
@@ -151,7 +151,7 @@
           id="openSidebarBtn"
           aria-label="Toggle navigation menu"
           aria-expanded="false"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark hover:border-indigo-500 text-xs font-bold transition"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-creator-bg-light dark:bg-creator-bg-dark border border-creator-border-light dark:border-creator-border-dark hover:border-indigo-500 text-xs font-bold transition shrink-0"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -159,9 +159,45 @@
           <span>Menu</span>
         </button>
         {% endif %}
-        <span class="text-sm font-bold text-creator-muted-light dark:text-creator-muted-dark truncate">
-          {% block topbar_title %}CreatorOps Hub{% endblock %}
-        </span>
+
+        <a href="{{ url_for('home') }}" class="text-sm font-black tracking-tight text-creator-text-light dark:text-creator-text-dark whitespace-nowrap">
+          CreatorOps Hub
+        </a>
+
+        {% if session.get('user_id') %}
+        <nav aria-label="Primary top navigation" class="hidden md:flex items-center gap-1 ml-2 text-xs font-bold">
+          <a
+            href="{{ url_for('home') }}"
+            class="px-3 py-1.5 rounded-xl transition {% if request.endpoint == 'home' %}bg-indigo-600 text-white{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+          >
+            Dashboard
+          </a>
+          <a
+            href="{{ url_for('links_page') }}"
+            class="px-3 py-1.5 rounded-xl transition {% if request.endpoint == 'links_page' %}bg-indigo-600 text-white{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+          >
+            Links
+          </a>
+          <a
+            href="{{ url_for('scheduler_page') }}"
+            class="px-3 py-1.5 rounded-xl transition {% if request.endpoint == 'scheduler_page' %}bg-indigo-600 text-white{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+          >
+            Scheduler
+          </a>
+          <a
+            href="{{ url_for('ai_generator_page') }}"
+            class="px-3 py-1.5 rounded-xl transition {% if request.endpoint == 'ai_generator_page' %}bg-indigo-600 text-white{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+          >
+            AI Tools
+          </a>
+          <a
+            href="{{ url_for('finance_page') }}"
+            class="px-3 py-1.5 rounded-xl transition {% if request.endpoint == 'finance_page' %}bg-indigo-600 text-white{% else %}text-creator-muted-light dark:text-creator-muted-dark hover:bg-creator-bg-light dark:hover:bg-creator-bg-dark hover:text-creator-text-light dark:hover:text-creator-text-dark{% endif %}"
+          >
+            Finances
+          </a>
+        </nav>
+        {% endif %}
       </div>
 
       <div class="flex items-center gap-3 shrink-0">
