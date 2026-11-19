@@ -23,15 +23,20 @@
       enctype="multipart/form-data"
       class="flex flex-col sm:flex-row sm:items-center gap-4 pb-6 border-b border-creator-border-light dark:border-creator-border-dark"
     >
+      {% set avatar_initial = (user.username or 'U')[0] | upper %}
       {% if user.avatar_url %}
         <img
           src="{{ user.avatar_url }}"
-          alt="Profile picture"
+          alt="Profile avatar"
+          onerror="this.classList.add('hidden'); document.getElementById('avatarFallbackBadge').classList.remove('hidden');"
           class="w-16 h-16 rounded-full object-cover border border-creator-border-light dark:border-creator-border-dark shrink-0"
         />
+        <div id="avatarFallbackBadge" class="hidden w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-black shrink-0">
+          {{ avatar_initial }}
+        </div>
       {% else %}
         <div class="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-black shrink-0">
-          {{ (user.username or 'U')[0] | upper }}
+          {{ avatar_initial }}
         </div>
       {% endif %}
 
@@ -107,7 +112,7 @@
           type="submit"
           class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-sm transition"
         >
-          Save Preferences →
+          Save Preferences
         </button>
       </div>
     </form>
@@ -126,7 +131,7 @@
           href="{{ url_for('logout') }}"
           class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-2xl text-sm font-bold transition shrink-0"
         >
-          Logout →
+          Logout
         </a>
       </div>
     </div>
