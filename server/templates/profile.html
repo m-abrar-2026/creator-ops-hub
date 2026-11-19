@@ -1,77 +1,47 @@
 {% extends "base.html" %}
-{% block title %}Profile & Settings - CreatorOps Hub{% endblock %}
+{% block title %}Profile Settings - CreatorOps Hub{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto py-8 px-4 space-y-8">
+<h1 class="text-2xl font-bold mb-6">Profile Settings</h1>
 
-    <!-- Page Header Card with Indigo Gradient Accent -->
-    <div class="relative bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl p-8 text-white overflow-hidden shadow-xl border border-indigo-900/50">
-        <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        <div class="relative z-10">
-            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-800/80 text-indigo-200 uppercase tracking-wider mb-3 border border-indigo-700/50">
-                Creator Profile
-            </span>
-            <h1 class="text-3xl font-black tracking-tight">Studio Settings</h1>
-            <p class="text-sm text-indigo-200/80 mt-1">Manage your account credentials and control real-time email notifications.</p>
+<div class="max-w-2xl space-y-6">
+  <div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <h2 class="text-base font-semibold mb-4">Profile Picture</h2>
+    <form method="POST" action="{{ url_for('upload_avatar') }}" enctype="multipart/form-data" class="flex flex-col sm:flex-row sm:items-center gap-4">
+      {% if user.avatar_url %}
+        <img src="{{ user.avatar_url }}" alt="Profile picture" class="w-16 h-16 rounded-full object-cover border border-slate-300 dark:border-slate-700" />
+      {% else %}
+        <div class="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold">
+          {{ (user.username or 'U')[0] | upper }}
         </div>
-    </div>
+      {% endif %}
+      <input
+        type="file"
+        name="avatar"
+        accept=".png,.jpg,.jpeg,.webp"
+        required
+        class="text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
+      />
+      <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+        Upload
+      </button>
+    </form>
+  </div>
 
-    <!-- Main Settings Container -->
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors space-y-8">
-
-        <!-- Account Information Section -->
-        <div>
-            <h3 class="text-lg font-black text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">Account Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Username</label>
-                    <input type="text" disabled value="{{ user.username }}" class="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 cursor-not-allowed">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
-                    <input type="email" disabled value="{{ user.email }}" class="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-700 dark:text-slate-300 cursor-not-allowed">
-                </div>
-            </div>
-        </div>
-
-        <!-- Notification Preferences Section -->
-        <div>
-            <h3 class="text-lg font-black text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">Automation & Alerts</h3>
-
-            <form method="POST" action="/profile" class="space-y-6">
-                <div class="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl">
-                    <div>
-                        <p class="text-sm font-bold text-slate-900 dark:text-white">Email Notification Alerts</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Receive automated alerts when scheduled content goes live.</p>
-                    </div>
-                    <!-- Toggle Switch -->
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="email_notifications" value="true" {% if user.email_notifications %}checked{% endif %} class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
-                    </label>
-                </div>
-
-                <div class="flex justify-end">
-                    <button type="submit" class="bg-slate-900 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl text-sm font-bold shadow-lg transition flex items-center gap-2">
-                        <span>Save Preferences</span> →
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Account Actions / Logout Section -->
-        <div>
-            <h3 class="text-lg font-black text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">Session Actions</h3>
-            <div class="flex items-center justify-between p-5 bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl">
-                <div>
-                    <p class="text-sm font-bold text-slate-900 dark:text-white">Sign Out of Workspace</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">End your current secure session on this device.</p>
-                </div>
-                <a href="/logout" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-lg shadow-red-500/20 transition flex items-center gap-2">
-                    <span>Logout</span> →
-                </a>
-            </div>
-        </div>
-
-    </div>
+  <div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <h2 class="text-base font-semibold mb-4">Account & Alerts</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+      Signed in as <strong>{{ user.username }}</strong> ({{ user.email }})
+    </p>
+    <form method="POST" action="{{ url_for('profile_page') }}" class="space-y-4">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="email_notifications" value="true" {% if user.email_notifications %}checked{% endif %} class="rounded" />
+        <span>Send email alerts when scheduled posts auto-publish</span>
+      </label>
+      <button type="submit" class="px-4 py-2 rounded-lg bg-slate-800 dark:bg-slate-700 text-white text-sm font-medium">
+        Save Preferences
+      </button>
+    </form>
+  </div>
 </div>
 {% endblock %}

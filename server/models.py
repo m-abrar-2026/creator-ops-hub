@@ -66,3 +66,5 @@ class Sponsorship(db.Model):
     status = db.Column(db.String(50), nullable=False, default='Pending') # Pending, Completed
     date_logged = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    avatar_url = db.Column(db.String(255), nullable=True)
