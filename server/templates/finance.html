@@ -9,27 +9,54 @@
   </div>
   <a
     href="{{ url_for('export_finance_csv') }}"
-    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"
+    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"
   >
-    Export CSV
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+    </svg>
+    <span>Export CSV</span>
   </a>
 </div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
   <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-    <p class="text-xs uppercase text-slate-500 dark:text-slate-400">Completed Earnings</p>
-    <p class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">{{ "%.2f"|format(total_earnings) }}</p>
+    <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Completed Earnings</p>
+    <p class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">${{ "%.2f"|format(total_earnings) }}</p>
   </div>
   <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-    <p class="text-xs uppercase text-slate-500 dark:text-slate-400">Pending Payouts</p>
-    <p class="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">{{ "%.2f"|format(pending_earnings) }}</p>
+    <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Pending Payouts</p>
+    <p class="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">${{ "%.2f"|format(pending_earnings) }}</p>
+  </div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Deals</p>
+    <p class="text-2xl font-bold mt-1">{{ deals|length }}</p>
   </div>
 </div>
 
 <form method="POST" action="{{ url_for('finance_page') }}" class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-6 grid grid-cols-1 sm:grid-cols-4 gap-3">
-  <input type="text" name="brand_name" required placeholder="Brand Name" class="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent text-sm" />
-  <input type="text" name="deal_title" required placeholder="Campaign / Deal Title" class="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent text-sm" />
-  <input type="number" step="0.01" name="payout_amount" required placeholder="Amount" class="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent text-sm" />
+  <input
+    type="text"
+    name="brand_name"
+    required
+    placeholder="Brand Name"
+    class="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent text-sm"
+  />
+  <input
+    type="text"
+    name="deal_title"
+    required
+    placeholder="Campaign / Deal Title"
+    class="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent text-sm"
+  />
+  <input
+    type="number"
+    step="0.01"
+    min="0"
+    name="payout_amount"
+    required
+    placeholder="Amount"
+    class="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent text-sm"
+  />
   <div class="flex gap-2">
     <select name="status" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm">
       <option value="Pending">Pending</option>
@@ -42,6 +69,11 @@
 </form>
 
 <div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-base font-semibold">Sponsorship Deals</h2>
+    <span class="text-xs text-slate-500 dark:text-slate-400">{{ deals|length }} record(s)</span>
+  </div>
+
   <div class="w-full overflow-x-auto">
     <table class="w-full text-left text-sm">
       <thead>
@@ -58,17 +90,27 @@
         <tr>
           <td class="py-3 pr-4 font-medium">{{ deal.brand_name }}</td>
           <td class="py-3 pr-4">{{ deal.deal_title }}</td>
-          <td class="py-3 pr-4">{{ "%.2f"|format(deal.payout_amount) }}</td>
-          <td class="py-3 pr-4">{{ deal.status }}</td>
+          <td class="py-3 pr-4 font-medium">${{ "%.2f"|format(deal.payout_amount) }}</td>
+          <td class="py-3 pr-4">
+            {% if deal.status == 'Completed' %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                Completed
+              </span>
+            {% else %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                Pending
+              </span>
+            {% endif %}
+          </td>
           <td class="py-3 flex items-center gap-2">
             <form method="POST" action="{{ url_for('update_finance_status', deal_id=deal.id) }}" class="inline">
               <input type="hidden" name="status" value="{{ 'Completed' if deal.status == 'Pending' else 'Pending' }}" />
-              <button type="submit" class="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800">
+              <button type="submit" class="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700">
                 Mark {{ 'Completed' if deal.status == 'Pending' else 'Pending' }}
               </button>
             </form>
             <form method="POST" action="{{ url_for('delete_sponsorship', deal_id=deal.id) }}" class="inline">
-              <button type="submit" class="px-2.5 py-1 rounded-md text-xs font-medium bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+              <button type="submit" class="px-2.5 py-1 rounded-md text-xs font-medium bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50">
                 Delete
               </button>
             </form>

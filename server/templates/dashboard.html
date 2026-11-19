@@ -7,9 +7,14 @@
     <h1 class="text-2xl font-bold">Creator Dashboard</h1>
     <p class="text-sm text-slate-500 dark:text-slate-400">Overview of your affiliate clicks and active links.</p>
   </div>
-  <a href="{{ url_for('links_page') }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
-    Manage Links
-  </a>
+  <div class="flex flex-wrap items-center gap-2">
+    <a href="{{ url_for('scheduler_page') }}" class="inline-flex items-center justify-center px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800">
+      Schedule Post
+    </a>
+    <a href="{{ url_for('links_page') }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+      Manage Links
+    </a>
+  </div>
 </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -30,14 +35,22 @@
 </div>
 
 <div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-6">
-  <h2 class="text-base font-semibold mb-4">Click Analytics Over Time</h2>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+    <h2 class="text-base font-semibold">Click Analytics Over Time</h2>
+    <span id="chartStatusText" class="text-xs text-slate-500 dark:text-slate-400">Loading analytics...</span>
+  </div>
   <div class="w-full h-64">
     <canvas id="analyticsChart"></canvas>
   </div>
 </div>
 
 <div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-  <h2 class="text-base font-semibold mb-4">Recent Links</h2>
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-base font-semibold">Recent Links</h2>
+    <a href="{{ url_for('links_page') }}" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+      View all
+    </a>
+  </div>
   <div class="w-full overflow-x-auto">
     <table class="w-full text-left text-sm">
       <thead>
@@ -100,30 +113,75 @@
     }
   }
 
+  let dashboardChart = null;
+
+  function isDarkModeActive() {
+    return document.documentElement.classList.contains("dark");
+  }
+
+  function renderAnalyticsChart(labels, data) {
+    const canvas = document.getElementById("analyticsChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const dark = isDarkModeActive();
+    const gridColor = dark ? "rgba(148, 163, 184, 0.15)" : "rgba(100, 116, 139, 0.15)";
+    const tickColor = dark ? "#94a3b8" : "#64748b";
+    const borderColor = dark ? "#818cf8" : "#4f46e5";
+    const fillColor = dark ? "rgba(129, 140, 248, 0.18)" : "rgba(79, 70, 229, 0.15)";
+
+    if (dashboardChart) {
+      dashboardChart.destroy();
+    }
+
+    dashboardChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Clicks",
+          data: data,
+          borderColor: borderColor,
+          backgroundColor: fillColor,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+          y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, precision: 0 } }
+        }
+      }
+    });
+  }
+
   fetch("{{ url_for('chart_analytics_api') }}")
     .then((res) => res.json())
     .then((payload) => {
-      const ctx = document.getElementById("analyticsChart").getContext("2d");
-      new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: payload.labels || [],
-          datasets: [{
-            label: "Clicks",
-            data: payload.data || [],
-            borderColor: "#4f46e5",
-            backgroundColor: "rgba(79, 70, 229, 0.15)",
-            fill: true,
-            tension: 0.35
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-        }
-      });
+      const labels = payload.labels && payload.labels.length ? payload.labels : ["No Data"];
+      const data = payload.data && payload.data.length ? payload.data : [0];
+      const statusEl = document.getElementById("chartStatusText");
+      if (statusEl) {
+        statusEl.textContent = payload.data && payload.data.length ? "Live click history" : "No click events recorded yet";
+      }
+      renderAnalyticsChart(labels, data);
+
+      const themeBtn = document.getElementById("themeToggleBtn");
+      if (themeBtn) {
+        themeBtn.addEventListener("click", () => {
+          renderAnalyticsChart(labels, data);
+        });
+      }
+    })
+    .catch(() => {
+      const statusEl = document.getElementById("chartStatusText");
+      if (statusEl) {
+        statusEl.textContent = "Unable to load analytics";
+      }
     });
 </script>
 {% endblock %}

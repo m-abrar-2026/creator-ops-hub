@@ -33,12 +33,25 @@
     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
       Signed in as <strong>{{ user.username }}</strong> ({{ user.email }})
     </p>
-    <form method="POST" action="{{ url_for('profile_page') }}" class="space-y-4">
-      <label class="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="email_notifications" value="true" {% if user.email_notifications %}checked{% endif %} class="rounded" />
-        <span>Send email alerts when scheduled posts auto-publish</span>
-      </label>
-      <button type="submit" class="px-4 py-2 rounded-lg bg-slate-800 dark:bg-slate-700 text-white text-sm font-medium">
+    <form method="POST" action="{{ url_for('profile_page') }}" class="space-y-5">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <p class="text-sm font-medium">Email Notifications</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Receive email alerts when scheduled posts auto-publish</p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            name="email_notifications"
+            value="true"
+            class="sr-only peer"
+            {% if user.email_notifications %}checked{% endif %}
+          />
+          <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+        </label>
+      </div>
+
+      <button type="submit" class="px-4 py-2 rounded-lg bg-slate-800 dark:bg-slate-700 text-white text-sm font-medium hover:bg-slate-900 dark:hover:bg-slate-600">
         Save Preferences
       </button>
     </form>

@@ -4,36 +4,36 @@
 <div class="max-w-6xl mx-auto py-8 px-4 space-y-8">
 
     <!-- Page Header Card -->
-    <div class="relative bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl p-8 text-white overflow-hidden shadow-xl border border-indigo-900/50">
+    <div class="relative bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white overflow-hidden shadow-xl border border-indigo-900/50">
         <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
         <div class="relative z-10">
             <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-800/80 text-indigo-200 uppercase tracking-wider mb-3 border border-indigo-700/50">
                 AI Studio Assistant
             </span>
-            <h1 class="text-3xl font-black tracking-tight">Caption & Hashtag Generator</h1>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Caption & Hashtag Generator</h1>
             <p class="text-sm text-indigo-200/80 mt-1">Instantly generate platform-optimized hooks, captions, and trending hashtags for your content.</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         <!-- Generator Form -->
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8 transition-colors">
             <h3 class="text-lg font-black text-slate-900 dark:text-white mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">Content Details</h3>
 
             <form method="POST" action="/view/ai-generator" class="space-y-6">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Content Title / Topic</label>
-                    <input type="text" name="title" required placeholder="e.g., Building a Multi-Tenant RBAC System" class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
+                    <input type="text" name="title" value="{{ result.title if result else '' }}" required placeholder="e.g., Building a Multi-Tenant RBAC System" class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Target Platform</label>
                         <select name="platform" required class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
-                            <option value="YouTube">YouTube</option>
-                            <option value="Instagram">Instagram</option>
-                            <option value="TikTok">TikTok</option>
-                            <option value="Facebook">Facebook</option>
+                            <option value="YouTube" {% if result and result.platform == 'YouTube' %}selected{% endif %}>YouTube</option>
+                            <option value="Instagram" {% if result and result.platform == 'Instagram' %}selected{% endif %}>Instagram</option>
+                            <option value="TikTok" {% if result and result.platform == 'TikTok' %}selected{% endif %}>TikTok</option>
+                            <option value="Facebook" {% if result and result.platform == 'Facebook' %}selected{% endif %}>Facebook</option>
                         </select>
                     </div>
 
@@ -48,7 +48,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-2xl text-sm font-bold shadow-lg transition flex items-center gap-2">
+                    <button type="submit" class="w-full sm:w-auto justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-2xl text-sm font-bold shadow-lg transition flex items-center gap-2">
                         <span>Generate with AI</span>
                     </button>
                 </div>
@@ -56,27 +56,51 @@
         </div>
 
         <!-- Generated Output Box -->
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors flex flex-col justify-between">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8 transition-colors flex flex-col justify-between">
             <div>
                 <h3 class="text-lg font-black text-slate-900 dark:text-white mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">Generated Result</h3>
 
                 {% if result %}
                 <div class="space-y-4">
-                    <div>
+                    <div class="flex items-center justify-between gap-2">
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Platform: <span class="text-indigo-600 dark:text-indigo-400">{{ result.platform }}</span></span>
+                        <button
+                            type="button"
+                            onclick="copyGeneratedField('aiFullOutput', this)"
+                            class="px-3 py-1 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                        >
+                            Copy All
+                        </button>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Optimized Caption & Hook</label>
-                        <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line font-mono">
-                            {{ result.caption }}
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Optimized Caption & Hook</label>
+                            <button
+                                type="button"
+                                onclick="copyGeneratedField('aiCaptionText', this)"
+                                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                            >
+                                Copy Caption
+                            </button>
                         </div>
+                        <div id="aiCaptionText" class="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line font-mono">{{ result.caption }}</div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Trending Hashtags</label>
-                        <div class="p-3 bg-indigo-50/50 dark:bg-indigo-950/30 rounded-2xl border border-indigo-200 dark:border-indigo-900/50 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                            {{ result.hashtags }}
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Trending Hashtags</label>
+                            <button
+                                type="button"
+                                onclick="copyGeneratedField('aiHashtagsText', this)"
+                                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                            >
+                                Copy Hashtags
+                            </button>
                         </div>
+                        <div id="aiHashtagsText" class="p-3 bg-indigo-50/50 dark:bg-indigo-950/30 rounded-2xl border border-indigo-200 dark:border-indigo-900/50 text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ result.hashtags }}</div>
                     </div>
+                    <textarea id="aiFullOutput" class="hidden" readonly>{{ result.caption }}
+
+{{ result.hashtags }}</textarea>
                 </div>
                 {% else %}
                 <div class="text-center py-16">
@@ -88,4 +112,30 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copyGeneratedField(elementId, btn) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const text = (el.value !== undefined ? el.value : el.innerText).trim();
+    const done = () => {
+      const prev = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = prev; }, 1600);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done);
+    } else {
+      const tmp = document.createElement("textarea");
+      tmp.value = text;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand("copy");
+      document.body.removeChild(tmp);
+      done();
+    }
+  }
+</script>
 {% endblock %}
