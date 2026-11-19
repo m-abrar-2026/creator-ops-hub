@@ -393,12 +393,12 @@ def create_app():
                     return f"SCHEDULER ERROR: {str(e)}"
                 print(" SCHEDULED POST SAVED")
 
-
         try:
-            posts = ScheduledPost.query.filter_by(user_id=user_id).order_by(ScheduledPost.scheduled_for.desc()).all()
+            posts = ScheduledPost.query.all()
         except Exception as e:
             db.session.rollback()
-            posts = []
+            print("SCHEDULER PAGE ERROR:", str(e))
+            return f"SCHEDULER PAGE ERROR: {str(e)}"
         return render_template('scheduler.html', posts=posts)
 
     @app.route('/view/ai-generator', methods=['GET', 'POST'])
