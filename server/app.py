@@ -245,51 +245,62 @@ def create_app():
 
     @app.route('/links', methods=['GET', 'POST'])
     def links_page():
-        user_id = get_valid_user_id()
-        if not user_id:
+
+        print("ENTERED LINKS PAGE")
+
+        if 'user_id' not in session:
             return redirect(url_for('login_page'))
 
-        # Ensure the user actually exists in the database right now
-        current_user = db.session.get(User, user_id)
-        if not current_user:
-            session.clear()
-            return redirect(url_for('login_page'))
+        user_id = session.get('user_id')
 
-        error = None
         if request.method == 'POST':
             title = request.form.get('title')
             slug = request.form.get('slug')
             destination_url = request.form.get('destination_url')
 
-            if not title or not slug or not destination_url:
-                error = "All fields are required."
-            else:
-                try:
-                    existing = AffiliateLink.query.filter_by(slug=slug).first()
-                    if existing:
-                        error = f"Slug '{slug}' is already taken. Please choose another."
-                    else:
-                        new_link = AffiliateLink(
-                            title=title,
-                            slug=slug,
-                            destination_url=destination_url,
-                            user_id=current_user.id  # Use verified user ID
-                        )
-                        db.session.add(new_link)
-                        db.session.commit()
-                        return redirect(url_for('links_page'))
-                except Exception as e:
-                    db.session.rollback()
-                    error = f"Database error: {str(e)}"
-                    print(f" [LINKS ERROR] {e}")
+            try:
+
+                print("CREATING LINK")
+
+                new_link = AffiliateLink(
+                    title=title,
+                    slug=slug,
+                    destination_url=destination_url,
+                    user_id=user_id
+                )
+
+                db.session.add(new_link)
+                db.session.commit()
+
+                print("✅ LINK SAVED")
+
+                return redirect(url_for('links_page'))
+
+            except Exception as e:
+                db.session.rollback()
+                print("❌ LINK INSERT ERROR:", e)
+                return str(e)
 
         try:
-            links = AffiliateLink.query.order_by(AffiliateLink.id.desc()).all()
+            print("LOADING LINKS")
+
+            links = AffiliateLink.query.filter_by(
+                user_id=user_id
+            ).all()
+
+            print("LINK COUNT =", len(links))
+
+            return render_template(
+                'links.html',
+                links=links
+            )
+
         except Exception as e:
             db.session.rollback()
-            links = []
 
-        return render_template('links.html', links=links, error=error)
+            print("❌ LINK PAGE ERROR:", e)
+
+            return str(e)
     @app.route('/view/scheduler', methods=['GET', 'POST'])
     def scheduler_page():
         if 'user_id' not in session:
