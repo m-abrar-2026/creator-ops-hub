@@ -2,90 +2,79 @@
 {% block title %}Dashboard - CreatorOps Hub{% endblock %}
 
 {% block content %}
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-  <div>
-    <h1 class="text-2xl font-bold">Creator Dashboard</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400">Overview of your affiliate clicks and active links.</p>
-  </div>
-  <div class="flex flex-wrap items-center gap-2">
-    <a href="{{ url_for('scheduler_page') }}" class="inline-flex items-center justify-center px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800">
-      Schedule Post
-    </a>
-    <a href="{{ url_for('links_page') }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
-      Manage Links
+<div class="max-w-6xl mx-auto py-8 px-4 space-y-8">
+  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-black text-slate-900 dark:text-white">Creator Dashboard</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Overview of your affiliate clicks, active links, and recent activity.</p>
+    </div>
+    <a href="{{ url_for('links_page') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-sm transition text-center">
+      Generate Link
     </a>
   </div>
-</div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-  <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-    <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Clicks</p>
-    <p class="text-2xl font-bold mt-1">{{ total_clicks }}</p>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">TOTAL CLICKS</p>
+      <p class="text-3xl font-black text-slate-900 dark:text-white mt-2">{{ total_clicks }}</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">ACTIVE LINKS</p>
+      <p class="text-3xl font-black text-slate-900 dark:text-white mt-2">{{ active_links_count }}</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">TOP PERFORMING LINK</p>
+      <p class="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-2 truncate">
+        {% if top_link %}{{ top_link.title }} ({{ top_link.click_count }}){% else %}No links yet{% endif %}
+      </p>
+    </div>
   </div>
-  <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-    <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Links</p>
-    <p class="text-2xl font-bold mt-1">{{ active_links_count }}</p>
-  </div>
-  <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 sm:col-span-2 lg:col-span-1">
-    <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Top Performing Link</p>
-    <p class="text-lg font-semibold mt-1 truncate">
-      {% if top_link %}{{ top_link.title }} ({{ top_link.click_count }} clicks){% else %}No links yet{% endif %}
-    </p>
-  </div>
-</div>
 
-<div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-6">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-    <h2 class="text-base font-semibold">Click Analytics Over Time</h2>
-    <span id="chartStatusText" class="text-xs text-slate-500 dark:text-slate-400">Loading analytics...</span>
+  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
+    <h2 class="text-xl font-black text-slate-900 dark:text-white mb-6">Click Analytics Over Time</h2>
+    <div class="w-full h-64">
+      <canvas id="analyticsChart"></canvas>
+    </div>
   </div>
-  <div class="w-full h-64">
-    <canvas id="analyticsChart"></canvas>
-  </div>
-</div>
 
-<div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-base font-semibold">Recent Links</h2>
-    <a href="{{ url_for('links_page') }}" class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-      View all
-    </a>
-  </div>
-  <div class="w-full overflow-x-auto">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
-          <th class="py-2.5 pr-4">Title</th>
-          <th class="py-2.5 pr-4">Short URL</th>
-          <th class="py-2.5 pr-4">Clicks</th>
-          <th class="py-2.5">Action</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-        {% for link in recent_links %}
-        {% set short_url = url_for('redirect_to_target', slug=link.slug, _external=True) %}
-        <tr>
-          <td class="py-3 pr-4 font-medium">{{ link.title }}</td>
-          <td class="py-3 pr-4 text-indigo-600 dark:text-indigo-400 break-all">{{ short_url }}</td>
-          <td class="py-3 pr-4">{{ link.click_count }}</td>
-          <td class="py-3">
-            <button
-              type="button"
-              data-copy-url="{{ short_url }}"
-              onclick="copyAffiliateLink(this)"
-              class="px-3 py-1 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
-            >
-              Copy Link
-            </button>
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="4" class="py-4 text-center text-slate-500">No recent links found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
+    <h2 class="text-xl font-black text-slate-900 dark:text-white mb-6">Recent Links</h2>
+    <div class="w-full overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <th class="py-3 px-4">Title</th>
+            <th class="py-3 px-4">Tracking URL</th>
+            <th class="py-3 px-4">Clicks</th>
+            <th class="py-3 px-4 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+          {% for link in recent_links %}
+          {% set short_url = url_for('redirect_to_target', slug=link.slug, _external=True) %}
+          <tr>
+            <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{{ link.title }}</td>
+            <td class="py-3.5 px-4 text-indigo-600 dark:text-indigo-400 break-all">{{ short_url }}</td>
+            <td class="py-3.5 px-4 font-semibold">{{ link.click_count }}</td>
+            <td class="py-3.5 px-4 text-right">
+              <button
+                type="button"
+                data-copy-url="{{ short_url }}"
+                onclick="copyAffiliateLink(this)"
+                class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
+              >
+                Copy Link
+              </button>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="py-6 text-center text-slate-400">No recent links found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -113,75 +102,30 @@
     }
   }
 
-  let dashboardChart = null;
-
-  function isDarkModeActive() {
-    return document.documentElement.classList.contains("dark");
-  }
-
-  function renderAnalyticsChart(labels, data) {
-    const canvas = document.getElementById("analyticsChart");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const dark = isDarkModeActive();
-    const gridColor = dark ? "rgba(148, 163, 184, 0.15)" : "rgba(100, 116, 139, 0.15)";
-    const tickColor = dark ? "#94a3b8" : "#64748b";
-    const borderColor = dark ? "#818cf8" : "#4f46e5";
-    const fillColor = dark ? "rgba(129, 140, 248, 0.18)" : "rgba(79, 70, 229, 0.15)";
-
-    if (dashboardChart) {
-      dashboardChart.destroy();
-    }
-
-    dashboardChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [{
-          label: "Clicks",
-          data: data,
-          borderColor: borderColor,
-          backgroundColor: fillColor,
-          fill: true,
-          tension: 0.35,
-          pointRadius: 3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { color: gridColor }, ticks: { color: tickColor } },
-          y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, precision: 0 } }
-        }
-      }
-    });
-  }
-
   fetch("{{ url_for('chart_analytics_api') }}")
     .then((res) => res.json())
     .then((payload) => {
-      const labels = payload.labels && payload.labels.length ? payload.labels : ["No Data"];
-      const data = payload.data && payload.data.length ? payload.data : [0];
-      const statusEl = document.getElementById("chartStatusText");
-      if (statusEl) {
-        statusEl.textContent = payload.data && payload.data.length ? "Live click history" : "No click events recorded yet";
-      }
-      renderAnalyticsChart(labels, data);
-
-      const themeBtn = document.getElementById("themeToggleBtn");
-      if (themeBtn) {
-        themeBtn.addEventListener("click", () => {
-          renderAnalyticsChart(labels, data);
-        });
-      }
-    })
-    .catch(() => {
-      const statusEl = document.getElementById("chartStatusText");
-      if (statusEl) {
-        statusEl.textContent = "Unable to load analytics";
-      }
+      const ctx = document.getElementById("analyticsChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: payload.labels || [],
+          datasets: [{
+            label: "Clicks",
+            data: payload.data || [],
+            borderColor: "#4f46e5",
+            backgroundColor: "rgba(79, 70, 229, 0.15)",
+            fill: true,
+            tension: 0.35
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
     });
 </script>
 {% endblock %}

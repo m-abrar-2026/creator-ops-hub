@@ -1,60 +1,110 @@
 {% extends "base.html" %}
-{% block title %}Profile Settings - CreatorOps Hub{% endblock %}
+{% block title %}Profile & Settings - CreatorOps Hub{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-6">Profile Settings</h1>
+<div class="max-w-4xl mx-auto py-8 px-4 space-y-8">
+  <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors space-y-6">
+    <h2 class="text-xl font-black text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-4">
+      Account Information
+    </h2>
 
-<div class="max-w-2xl space-y-6">
-  <div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-    <h2 class="text-base font-semibold mb-4">Profile Picture</h2>
-    <form method="POST" action="{{ url_for('upload_avatar') }}" enctype="multipart/form-data" class="flex flex-col sm:flex-row sm:items-center gap-4">
+    <!-- Profile Picture Upload -->
+    <form method="POST" action="{{ url_for('upload_avatar') }}" enctype="multipart/form-data" class="flex flex-col sm:flex-row sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
       {% if user.avatar_url %}
-        <img src="{{ user.avatar_url }}" alt="Profile picture" class="w-16 h-16 rounded-full object-cover border border-slate-300 dark:border-slate-700" />
+        <img
+          src="{{ user.avatar_url }}"
+          alt="Profile picture"
+          onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');"
+          class="w-16 h-16 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+        />
+        <div class="hidden w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold shrink-0">
+          {{ (user.username or 'U')[0] | upper }}
+        </div>
       {% else %}
-        <div class="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold">
+        <div class="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold shrink-0">
           {{ (user.username or 'U')[0] | upper }}
         </div>
       {% endif %}
+
       <input
         type="file"
         name="avatar"
         accept=".png,.jpg,.jpeg,.webp"
         required
-        class="text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
+        class="text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-600 file:text-white file:font-bold hover:file:bg-indigo-700"
       />
-      <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
-        Upload
+
+      <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition shrink-0">
+        Upload Photo
       </button>
     </form>
-  </div>
 
-  <div class="p-4 sm:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-    <h2 class="text-base font-semibold mb-4">Account & Alerts</h2>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
-      Signed in as <strong>{{ user.username }}</strong> ({{ user.email }})
-    </p>
-    <form method="POST" action="{{ url_for('profile_page') }}" class="space-y-5">
-      <div class="flex items-center justify-between gap-4">
-        <div>
-          <p class="text-sm font-medium">Email Notifications</p>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Receive email alerts when scheduled posts auto-publish</p>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            name="email_notifications"
-            value="true"
-            class="sr-only peer"
-            {% if user.email_notifications %}checked{% endif %}
-          />
-          <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+    <form method="POST" action="{{ url_for('profile_page') }}" class="space-y-6">
+      <div>
+        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+          USERNAME
         </label>
+        <input
+          type="text"
+          name="username"
+          value="{{ user.username }}"
+          readonly
+          class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100"
+        />
       </div>
 
-      <button type="submit" class="px-4 py-2 rounded-lg bg-slate-800 dark:bg-slate-700 text-white text-sm font-medium hover:bg-slate-900 dark:hover:bg-slate-600">
-        Save Preferences
-      </button>
+      <div>
+        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+          EMAIL ADDRESS
+        </label>
+        <input
+          type="email"
+          name="email"
+          value="{{ user.email }}"
+          readonly
+          class="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-slate-100"
+        />
+      </div>
+
+      <div class="pt-2">
+        <h3 class="text-lg font-black text-slate-900 dark:text-white mb-4">Automation & Alerts</h3>
+        <div class="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+          <div>
+            <p class="text-sm font-bold text-slate-900 dark:text-white">Email Notification Alerts</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Receive automated alerts when scheduled content goes live.</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              type="checkbox"
+              name="email_notifications"
+              value="true"
+              class="sr-only peer"
+              {% if user.email_notifications %}checked{% endif %}
+            />
+            <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" class="bg-slate-900 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-sm transition">
+          Save Preferences →
+        </button>
+      </div>
     </form>
+
+    <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+      <h3 class="text-lg font-black text-slate-900 dark:text-white mb-4">Session Actions</h3>
+      <div class="flex items-center justify-between gap-4 p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50">
+        <div>
+          <p class="text-sm font-bold text-slate-900 dark:text-white">Sign Out of Workspace</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">End your current secure session on this device.</p>
+        </div>
+        <a href="{{ url_for('logout') }}" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition shrink-0">
+          Logout →
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
