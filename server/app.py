@@ -723,6 +723,25 @@ def create_app():
             print(f" [DELETE SPONSORSHIP ERROR] {e}")
         return redirect(url_for('finance_page'))
 
+    @app.route('/scheduler/delete/<int:post_id>', methods=['POST'])
+    def delete_scheduled_post(post_id):
+
+        if 'user_id' not in session:
+            return redirect(url_for('login_page'))
+
+        try:
+            post = db.session.get(ScheduledPost, post_id)
+
+            if post:
+                db.session.delete(post)
+                db.session.commit()
+
+        except Exception as e:
+            db.session.rollback()
+            print("DELETE SCHEDULED POST ERROR:", e)
+
+        return redirect(url_for('scheduler_page'))
+
     @app.route('/debug/db', methods=['GET'])
     def debug_database():
         try:
