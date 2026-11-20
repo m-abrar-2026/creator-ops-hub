@@ -756,6 +756,27 @@ def create_app():
             print(f" [DELETE LINK ERROR] {e}")
         return redirect(url_for('links_page'))
 
+    @app.route('/notifications/clear', methods=['POST'])
+    def clear_notifications():
+
+        if 'user_id' not in session:
+            return redirect(url_for('login_page'))
+
+        user_id = session.get('user_id')
+
+        try:
+            Notification.query.filter_by(
+                user_id=user_id
+            ).delete()
+
+            db.session.commit()
+
+        except Exception as e:
+            db.session.rollback()
+            print("CLEAR NOTIFICATION ERROR:", e)
+
+        return redirect(request.referrer or url_for('home'))
+
     @app.route('/view/finance/delete/<int:deal_id>', methods=['POST'])
     def delete_sponsorship(deal_id):
         if 'user_id' not in session:

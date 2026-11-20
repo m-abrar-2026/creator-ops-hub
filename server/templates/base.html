@@ -225,7 +225,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             {% if notifications and notifications|length > 0 %}
-              <span class="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-indigo-600"></span>
+              <span id="notifDot" class="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-indigo-600"></span>
             {% endif %}
           </button>
 
@@ -235,9 +235,18 @@
           >
             <div class="flex items-center justify-between pb-2 mb-2 border-b border-creator-border-light dark:border-creator-border-dark">
               <span class="text-xs font-bold uppercase tracking-wider text-creator-muted-light dark:text-creator-muted-dark">Notifications</span>
-              <span class="text-xs text-creator-muted-light dark:text-creator-muted-dark">{{ notifications|length if notifications else 0 }}</span>
+              <div class="flex items-center gap-2">
+                <span id="notifCount" class="text-xs text-creator-muted-light dark:text-creator-muted-dark">{{ notifications|length if notifications else 0 }}</span>
+                <button
+                  type="button"
+                  id="clearNotifBtn"
+                  class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
-            <div class="space-y-2 max-h-60 overflow-y-auto">
+            <div id="notifList" class="space-y-2 max-h-60 overflow-y-auto">
               {% if notifications %}
                 {% for n in notifications %}
                   <div class="p-2.5 rounded-xl bg-creator-bg-light dark:bg-creator-bg-dark text-xs">
@@ -246,7 +255,7 @@
                   </div>
                 {% endfor %}
               {% else %}
-                <p class="text-xs text-creator-muted-light dark:text-creator-muted-dark py-3 text-center">No notifications yet.</p>
+                <p id="notifEmptyMsg" class="text-xs text-creator-muted-light dark:text-creator-muted-dark py-3 text-center">No notifications yet.</p>
               {% endif %}
             </div>
           </div>
@@ -355,6 +364,21 @@
         if (!notifDropdown.contains(e.target) && !notifBellBtn.contains(e.target)) {
           notifDropdown.classList.add("hidden");
         }
+      });
+    }
+
+    const clearNotifBtn = document.getElementById("clearNotifBtn");
+    if (clearNotifBtn) {
+      clearNotifBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const notifList = document.getElementById("notifList");
+        const notifCount = document.getElementById("notifCount");
+        const notifDot = document.getElementById("notifDot");
+        if (notifList) {
+          notifList.innerHTML = '<p class="text-xs text-creator-muted-light dark:text-creator-muted-dark py-3 text-center">No notifications yet.</p>';
+        }
+        if (notifCount) notifCount.textContent = "0";
+        if (notifDot) notifDot.remove();
       });
     }
   </script>
