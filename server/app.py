@@ -126,53 +126,41 @@ def create_app():
     # Upgraded Background Task: Auto-Publishing Simulation + In-App Alerts + Email
     @scheduler.task('interval', id='publish_scheduled_posts', seconds=60, misfire_grace_time=900)
     def background_publish_job():
-        print("BACKGROUND JOB RUNNING AT", datetime.datetime.now())
-
         with app.app_context():
+
+            print("BACKGROUND JOB RUNNING AT", datetime.datetime.now())
+
             now = datetime.datetime.now()
+
             due_posts = ScheduledPost.query.filter(
                 ScheduledPost.status == 'scheduled',
-
                 ScheduledPost.scheduled_for <= now
             ).all()
 
+            print("FOUND POSTS:", len(due_posts))
+
             for post in due_posts:
+
+                print("PROCESSING POST:", post.title)
+
                 post.status = 'published'
                 db.session.commit()
 
-
-
                 user = db.session.get(User, post.user_id)
+
                 if user:
+                    print("CREATING NOTIFICATION FOR:", user.username)
+
                     new_notif = Notification(
                         user_id=user.id,
                         title=f"Auto-Published: {post.platform}",
                         message=f"Post '{post.title}' was automatically pushed live via API."
                     )
+
                     db.session.add(new_notif)
                     db.session.commit()
 
-                    if user.email and user.email_notifications:
-                        try:
-                            msg = Message(
-                                subject=f"Auto-Published: {post.title} on {post.platform}!",
-                                recipients=[user.email],
-                                body=f"Hi {user.username},\n\n"
-                                     f"Your scheduled content has been automatically published via social API integration!\n\n"
-                                     f"Platform: {post.platform}\n"
-                                     f"Title: {post.title}\n\n"
-                                     f"- CreatorOps Hub Auto-Publisher"
-                            )
-                            mail.send(msg)
-                        except Exception as e:
-                            print(f" [EMAIL ERROR] {e}")
-
-                print(f" [AUTO-PUBLISH API] Successfully pushed post '{post.title}' to {post.platform}!")
-
-    # ==========================================
-    # PAGE ROUTING & WEB FORM HANDLERS
-    # ==========================================
-
+                    print("NOTIFICATION CREATED")
     @app.route('/')
     def home():
         if 'user_id' not in session:
