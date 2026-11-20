@@ -12,7 +12,7 @@
       </p>
     </div>
 
-    <form method="POST" action="{{ url_for('signup') }}" class="space-y-4">
+    <form method="POST" action="{{ url_for('signup_page') }}" class="space-y-4">
       <div>
         <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider mb-2">
           USERNAME
@@ -62,7 +62,7 @@
 
     <div class="pt-4 border-t border-creator-border-light dark:border-creator-border-dark text-center text-sm text-creator-muted-light dark:text-creator-muted-dark">
       Already have an account?
-      <a href=url_for('login_page') class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+      <a href="{{ url_for('login_page') }}" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
         Sign in
       </a>
     </div>
