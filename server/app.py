@@ -126,7 +126,7 @@ def create_app():
     # Upgraded Background Task: Auto-Publishing Simulation + In-App Alerts + Email
     @scheduler.task('interval', id='publish_scheduled_posts', seconds=60, misfire_grace_time=900)
     def background_publish_job():
-        print("BACKGROUND JOB RUNNING")
+        print("BACKGROUND JOB RUNNING AT", datetime.datetime.now())
 
         with app.app_context():
             now = datetime.datetime.now()
@@ -139,7 +139,8 @@ def create_app():
             for post in due_posts:
                 post.status = 'published'
                 db.session.commit()
-                print("FOUND POSTS:", len(due_posts))
+
+
 
                 user = db.session.get(User, post.user_id)
                 if user:
