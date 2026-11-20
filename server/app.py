@@ -225,6 +225,10 @@ def create_app():
             recent_links=recent_links,
         )
 
+    @app.route('/server-time')
+    def server_time():
+        return str(datetime.datetime.now())
+
     @app.route('/login', methods=['GET', 'POST'])
     def login_page():
         if request.method == 'POST':
