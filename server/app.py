@@ -128,7 +128,9 @@ def create_app():
     def background_publish_job():
         with app.app_context():
 
-            print("BACKGROUND JOB RUNNING AT", datetime.datetime.now())
+            print("BACKGROUND JOB RUNNING AT", datetime.datetime.now(), flush=True)
+            print("FOUND POSTS:", len(due_posts), flush=True)
+            print("PROCESSING POST:", post.title, flush=True)
 
             now = datetime.datetime.now()
 
@@ -161,6 +163,35 @@ def create_app():
                     db.session.commit()
 
                     print("NOTIFICATION CREATED")
+
+    @app.route('/test-publish')
+    def test_publish():
+
+        now = datetime.datetime.now()
+
+        due_posts = ScheduledPost.query.filter(
+            ScheduledPost.status == 'scheduled',
+            ScheduledPost.scheduled_for <= now
+        ).all()
+
+        for post in due_posts:
+            post.status = 'published'
+
+            user = db.session.get(User, post.user_id)
+
+            if user:
+                db.session.add(
+                    Notification(
+                        user_id=user.id,
+                        title=f"Auto-Published: {post.platform}",
+                        message=f"Post '{post.title}' was automatically pushed live via API."
+                    )
+                )
+
+        db.session.commit()
+
+        return f"Processed {len(due_posts)} posts"
+
     @app.route('/')
     def home():
         if 'user_id' not in session:
