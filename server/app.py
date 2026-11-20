@@ -124,45 +124,66 @@ def create_app():
         return "An internal server error occurred. Database transaction rolled back.", 500
 
     # Upgraded Background Task: Auto-Publishing Simulation + In-App Alerts + Email
-    @scheduler.task('interval', id='publish_scheduled_posts', seconds=60, misfire_grace_time=900)
+    @scheduler.task(
+        'interval',
+        id='publish_scheduled_posts',
+        seconds=60,
+        misfire_grace_time=900
+    )
     def background_publish_job():
+
         with app.app_context():
 
-            print("BACKGROUND JOB RUNNING AT", datetime.datetime.now(), flush=True)
-            print("FOUND POSTS:", len(due_posts), flush=True)
-            print("PROCESSING POST:", post.title, flush=True)
+            now = datetime.datetime.utcnow()
 
-            now = datetime.datetime.now()
+            print("BACKGROUND JOB RUNNING", flush=True)
+            print("CURRENT UTC TIME:", now, flush=True)
 
             due_posts = ScheduledPost.query.filter(
                 ScheduledPost.status == 'scheduled',
                 ScheduledPost.scheduled_for <= now
             ).all()
 
-            print("FOUND POSTS:", len(due_posts))
+            print("FOUND POSTS:", len(due_posts), flush=True)
 
             for post in due_posts:
 
-                print("PROCESSING POST:", post.title)
+                print("PROCESSING POST:", post.title, flush=True)
 
-                post.status = 'published'
-                db.session.commit()
+                try:
+                    post.status = 'published'
 
-                user = db.session.get(User, post.user_id)
+                    user = db.session.get(User, post.user_id)
 
-                if user:
-                    print("CREATING NOTIFICATION FOR:", user.username)
+                    if user:
+                        print(
+                            f"CREATING NOTIFICATION FOR USER: {user.username}",
+                            flush=True
+                        )
 
-                    new_notif = Notification(
-                        user_id=user.id,
-                        title=f"Auto-Published: {post.platform}",
-                        message=f"Post '{post.title}' was automatically pushed live via API."
-                    )
+                        new_notif = Notification(
+                            user_id=user.id,
+                            title=f"Auto-Published: {post.platform}",
+                            message=f"Post '{post.title}' was automatically pushed live via API."
+                        )
 
-                    db.session.add(new_notif)
+                        db.session.add(new_notif)
+
                     db.session.commit()
 
-                    print("NOTIFICATION CREATED")
+                    print(
+                        f"POST PUBLISHED: {post.title}",
+                        flush=True
+                    )
+
+                except Exception as e:
+
+                    db.session.rollback()
+
+                    print(
+                        f"SCHEDULER ERROR: {e}",
+                        flush=True
+                    )
 
     @app.route('/test-publish')
     def test_publish():
