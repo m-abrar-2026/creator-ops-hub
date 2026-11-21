@@ -12,6 +12,12 @@
       </p>
     </div>
 
+    {% if error %}
+      <div class="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold">
+        {{ error }}
+      </div>
+    {% endif %}
+
     <form method="POST" action="{{ url_for('login_page') }}" class="space-y-4">
       <div>
         <label class="block text-xs font-bold text-creator-muted-light dark:text-creator-muted-dark uppercase tracking-wider mb-2">
